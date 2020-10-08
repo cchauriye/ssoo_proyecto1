@@ -16,6 +16,6 @@ int main(int argc, char *argv[])
     os_mount(argv[1]);
     printf("%s\n", diskname);
     os_exists(argv[1]);
-    os_bitmap(1, false);
+    os_bitmap(1, true);
     return 0;
 }
