@@ -19,12 +19,12 @@ int main(int argc, char *argv[])
     os_mount(argv[1]);
     // os_exists(argv[1]);
     // os_bitmap(1, false);
-    // dir_name_from_path("hola/como/estas.x");
-    Dir_block* root_dir = dir_block_init(0);
-    Dir_block_entry* first_entry = dir_block_entry_init(root_dir, 0);
-    unsigned int block_num = find_dir_entry_by_name(root_dir, "folder");
+    dir_name_from_path("hola/como/estas.x");
+    // Dir_block* root_dir = dir_block_init(0);
+    // Dir_block_entry* first_entry = dir_block_entry_init(root_dir, 0);
+    // unsigned int block_num = find_dir_entry_by_name(root_dir, "folder");
     
-    free(root_dir);
-    free(first_entry);
+    // free(root_dir);
+    // free(first_entry);
     return 0;
 }

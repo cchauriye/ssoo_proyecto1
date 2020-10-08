@@ -126,7 +126,6 @@ void os_ls(char* path){
 
 char* dir_name_from_path(char* path){
     char *slash = path;
-    char* next;
     char* dir_name;
     char* leftover;
     while(strpbrk(slash+1, "\\/")){
@@ -134,8 +133,8 @@ char* dir_name_from_path(char* path){
         dir_name = strndup(path, slash - path);
         leftover = strdup(slash+1);
         printf("%s\n", dir_name);
-        dir_name_from_path(leftover);
-        return dir_name;
+        path = leftover;
+        slash = leftover;
     };
     dir_name = slash;
     printf("%s\n", dir_name);
