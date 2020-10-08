@@ -7,16 +7,24 @@
 #include <unistd.h> 
 #include <stdlib.h>
 #include "API/os_API.h"
+#include "blocks/dir_block.h"
+#include <math.h>
+
 
 extern char* diskname;
 
 int main(int argc, char *argv[])
 {
     // create_test_bin();
-    // os_mount(argv[1]);
-    // printf("%s\n", diskname);
+    os_mount(argv[1]);
     // os_exists(argv[1]);
     // os_bitmap(1, false);
-    dir_name_from_path("hola/como/estas.x");
+    // dir_name_from_path("hola/como/estas.x");
+    Dir_block* root_dir = dir_block_init(0);
+    Dir_block_entry* first_entry = dir_block_entry_init(root_dir, 0);
+    unsigned int block_num = find_dir_entry_by_name(root_dir, "folder");
+    
+    free(root_dir);
+    free(first_entry);
     return 0;
 }

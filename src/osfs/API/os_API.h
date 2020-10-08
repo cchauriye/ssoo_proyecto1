@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 
 void read_from_position(long int start, unsigned char* buffer, long int buff_size);
 void buffer_to_hex(unsigned char* hex_buffer, unsigned char* buffer, long int buff_size);

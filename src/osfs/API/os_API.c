@@ -92,11 +92,9 @@ void create_test_bin(){
 
 // Imprimir bitmap
 void os_bitmap(unsigned num, bool hex){
-
     long int buff_size = 20;
     unsigned char buffer[buff_size];
     read_from_position(2048*num, buffer, buff_size);
-    // print_buffer(buffer, buff_size);
     if(hex){
         unsigned char hex_buffer[buff_size * 2];
         buffer_to_hex(hex_buffer, buffer, buff_size);
@@ -135,11 +133,11 @@ char* dir_name_from_path(char* path){
         slash = strpbrk(slash+1, "\\/");
         dir_name = strndup(path, slash - path);
         leftover = strdup(slash+1);
-        //printf("%s\n", dir_name);
+        printf("%s\n", dir_name);
         dir_name_from_path(leftover);
         return dir_name;
     };
     dir_name = slash;
-    //printf("%s\n", dir_name);
+    printf("%s\n", dir_name);
     return dir_name;
 }
