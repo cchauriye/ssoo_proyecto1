@@ -6,4 +6,4 @@ void os_mount(char* diskname);
 void os_bitmap(unsigned num, bool hex);
 int os_exists(char* path);
 void os_ls(char* path);
-
+char* dir_name_from_path(char* path);

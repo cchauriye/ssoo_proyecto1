@@ -28,7 +28,7 @@ void print_buffer(unsigned char* buffer, long int buff_size)
 {
     for (int i = 0; i < buff_size; i++) {
         printf("%c", buffer[i]);
-    } 
+    }
     printf("\n");
     // for(int i = 0; i < buff_size; i++) {
     //     int z = 128, oct = buffer[i];
@@ -77,4 +77,26 @@ int os_exists(char* path){
         return 0;
     }
     return 1;
+}
+
+void os_ls(char* path){
+
+}
+
+char* dir_name_from_path(char* path){
+    char *slash = path;
+    char* next;
+    char* dir_name;
+    char* leftover;
+    while(strpbrk(slash+1, "\\/")){
+        slash = strpbrk(slash+1, "\\/");
+        dir_name = strndup(path, slash - path);
+        leftover = strdup(slash+1);
+        //printf("%s\n", dir_name);
+        dir_name_from_path(leftover);
+        return dir_name;
+    };
+    dir_name = slash;
+    //printf("%s\n", dir_name);
+    return dir_name;
 }
