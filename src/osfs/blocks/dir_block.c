@@ -60,32 +60,64 @@ Dir_block_entry* dir_block_entry_init(Dir_block* dir_block, unsigned int entry_n
     
     for (int i = 0; i < 29; i++)
     {
-      printf("%c", dir_block_entry->name[i]);
+      //printf("%c", dir_block_entry->name[i]);
     }
-    printf("\n");
+    //printf("\n");
 
     return dir_block_entry;
 }
 
-unsigned int find_dir_entry_by_name(Dir_block* dir_block, char* name)
+unsigned int find_dir_entry_by_name(unsigned int curr_block_num, char* name)
 {
-  printf("estoy buscando el name: %s \n", name);
-  for (int i = 0; i < 32; i++)
+  Dir_block* dir_block = dir_block_init(curr_block_num);
+  //printf("estoy buscando el name: %s \n", name);
+  for (int i = 0; i < 64; i++)
   {
     Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
-    printf("name del entry %i es %s: \n", i, dir_entry->name);
-    // for (int j = 0; j < 29; j++)
-    // {
-    //   printf("%c", dir_entry->name[j]);
-    // }
-    printf("\n");
-    if(strcmp(name, dir_entry->name) == 0) {
-      printf("lo encontre!\n");
+    //printf("name del entry %i es %s: \n", i, dir_entry->name);
+    //printf("\n");
+
+    //  Verifico que sea el nombre correcto y que apunte a un directorio
+    if(strcmp(name, dir_entry->name) == 0 && dir_entry->valid==2) {
+      //printf("lo encontre!\n");
       unsigned int block_num = dir_entry->block_num;
       free(dir_entry);
+      free(dir_block);
       return block_num;
     }
     free(dir_entry);
   }
+  free(dir_block);
   return 0;
+}
+
+void print_files_from_dir(unsigned int curr_block_num, char* name)
+{
+  Dir_block*  dir_block = dir_block_init(curr_block_num);
+  for (int i = 0; i < 64; i++)
+  {
+    Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
+
+    //  Verifico que sea el nombre correcto y que apunte a un archivo
+    if(dir_entry->valid==1) {
+      printf("Entry %i: %s\n", i, dir_entry->name);
+    }
+    free(dir_entry);
+  }
+  free(dir_block);
+  return;
+}
+
+// Imprime los nombres de todas las entradas de un bloque
+void print_all_entries_from_dir(unsigned int curr_block_num)
+{
+  Dir_block*  dir_block = dir_block_init(curr_block_num);
+  for (int i = 0; i < 64; i++)
+  {
+    Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
+    printf("Entry %i: %s |Block: %i\n", i, dir_entry->name, dir_entry->block_num);
+    free(dir_entry);
+  }
+  free(dir_block);
+  return;
 }
