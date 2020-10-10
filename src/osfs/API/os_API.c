@@ -145,7 +145,60 @@ void os_ls(char* path){
     };
     dir_name = slash;
     block_num = find_dir_entry_by_name(block_num, dir_name);
+    printf("sali while hehe Dir %i: %s\n", counter, dir_name);
+    print_files_from_dir(block_num, dir_name);
+    return;
+}
+
+
+//crear un direcotrio con el path dado
+void os_mkdir(char* path){
+
+    //Tenemos que encontrar un bloque vacío en el bitmap
+     /*
+     code
+     */
+
+
+    char *slash = path;
+    char* dir_name;
+    char* leftover;
+    int block_num = 0;
+    int counter = 1;
+
+    //iteramos en el path
+    while(strpbrk(slash+1, "\\/")){
+        slash = strpbrk(slash+1, "\\/");
+        dir_name = strndup(path, slash - path);
+        leftover = strdup(slash+1);
+        printf("Dir %i: %s\n", counter, dir_name);
+        path = leftover;
+        slash = leftover;
+        block_num = find_dir_entry_by_name(block_num, dir_name);
+        if(block_num == 0){
+            return;
+        }
+        counter++;
+    };
+
+    /*
+    Tenemos el directorio anterior (blocknum), debemos 
+    buscar una entrada vacía para asignarle la dirección de memoria
+    del bloque vacío que encontramos arriba
+    */
+
+
+    /*
+    Tenemos el nombre del directorio que queremos crear,
+    es dir_name. Basta con asignárselo a este nuevo bloque directorio
+    según cómo se inserta la info.
+    */
+
+    dir_name = slash;
+    block_num = find_dir_entry_by_name(block_num, dir_name);
     printf("Dir %i: %s\n", counter, dir_name);
     print_files_from_dir(block_num, dir_name);
     return;
+
+    
 }
