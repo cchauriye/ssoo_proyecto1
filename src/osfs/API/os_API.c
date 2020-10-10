@@ -155,10 +155,47 @@ void os_ls(char* path){
 void os_mkdir(char* path){
 
     //Tenemos que encontrar un bloque vacío en el bitmap
-     /*
-     code
-     */
+    long int buff_size = BLOCK_SIZE;
+    unsigned char buffer[buff_size];
+    int num = 1;
+    for (int i = 1; i < 2; i++)
+    {
+        read_from_position(BLOCK_SIZE*num, buffer, buff_size); 
+        print_binary_buffer(buffer, buff_size);
+       
+        // for(int i = 0; i < 30; i++) {
+        //     int z = 128, oct = buffer[i];
+        //     while (z > 0)
+        //     {
+        //         if (!(oct & z))
+        //             printf("Bloque vacío.\nBLOCK_NUM = %i \nBYTE: %i\n (valor de z: %i)\n\n", num, i, z );
+        //             //fprintf(stderr, "1");
+        //         z >>= 1;
+        //     }
+        //     fprintf(stderr, "\n");
 
+        for(int i = 0; i < 20; i++) {
+            int z = 128, oct = buffer[i];
+            while (z > 0)
+            {
+                if (oct & z)
+                    fprintf(stderr, "1");
+                else
+                    fprintf(stderr, "0");
+                    //printf("Bloque vacío.\nBLOCK_NUM = %i \nBYTE: %i\n(valor de z: %i)\n\n", num, i, z);
+                z >>= 1;
+            }
+            fprintf(stderr, "\n");
+           
+        }  
+        num ++; 
+
+      
+    }
+
+    
+
+   
 
     char *slash = path;
     char* dir_name;
@@ -189,10 +226,12 @@ void os_mkdir(char* path){
 
 
     /*
+    dir_name = slash;
     Tenemos el nombre del directorio que queremos crear,
     es dir_name. Basta con asignárselo a este nuevo bloque directorio
     según cómo se inserta la info.
     */
+
    
 
     dir_name = slash;
