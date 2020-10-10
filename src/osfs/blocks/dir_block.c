@@ -14,7 +14,7 @@ Dir_block* dir_block_init(unsigned int block_num)
 
   for (unsigned int i = 0; i < total_entries; i++)
   {
-      dir_block->entries[i] = block_num*2048 + entry_size * i; // Parte desde el bloque 0
+      dir_block->entries[i] = block_num * 2048 + entry_size * i;
   }
 
   return dir_block;
