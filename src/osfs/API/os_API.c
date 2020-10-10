@@ -24,7 +24,8 @@ void read_from_position(long int start, unsigned char* buffer, long int buff_siz
     fclose(ptr);
 };
 
-void print_buffer(unsigned char* buffer, long int buff_size)
+// Imprimir buffer en binario
+void print_binary_buffer(unsigned char* buffer, long int buff_size)
 {
     // for (int i = 0; i < buff_size; i++) {
     //     printf("%i", buffer[i]);
@@ -44,7 +45,8 @@ void print_buffer(unsigned char* buffer, long int buff_size)
     }
 }
 
-void buffer_to_hex(unsigned char* hex_buffer, unsigned char* buffer, long int buff_size)
+// Imprimir buffer en hexadecimal
+void print_hex_buffer(unsigned char* hex_buffer, unsigned char* buffer, long int buff_size)
 { 
     for (int i = 0; i < buff_size; i++) {
         int dec_num = buffer[i];
@@ -82,6 +84,7 @@ void os_mount(char* disk){
     diskname = disk;
 }
 
+// Crear archivo binario de prueba
 void create_test_bin(){
     FILE *fp;
     unsigned char mibyte[8] = "10101010";
@@ -94,17 +97,17 @@ void create_test_bin(){
 void os_bitmap(unsigned num, bool hex){
     long int buff_size = 20;
     unsigned char buffer[buff_size];
-    read_from_position(2048*num, buffer, buff_size);
+    read_from_position(BLOCK_SIZE*num, buffer, buff_size);
     if(hex){
         unsigned char hex_buffer[buff_size * 2];
-        buffer_to_hex(hex_buffer, buffer, buff_size);
+        print_hex_buffer(hex_buffer, buffer, buff_size);
         for (int i=0; i<buff_size*2; i++){
             printf("%c", hex_buffer[i]);
         }
         printf("\n");
     }
     else {
-        print_buffer(buffer, buff_size);
+        print_binary_buffer(buffer, buff_size);
     }
 }
 
@@ -120,13 +123,14 @@ int os_exists(char* path){
     return 1;
 }
 
+// Imprimir nombres de archivos en el path dado
 void os_ls(char* path){
 
 }
 
+// Split del path
 char* dir_name_from_path(char* path){
     char *slash = path;
-    char* next;
     char* dir_name;
     char* leftover;
     while(strpbrk(slash+1, "\\/")){
@@ -134,8 +138,8 @@ char* dir_name_from_path(char* path){
         dir_name = strndup(path, slash - path);
         leftover = strdup(slash+1);
         printf("%s\n", dir_name);
-        dir_name_from_path(leftover);
-        return dir_name;
+        path = leftover;
+        slash = leftover;
     };
     dir_name = slash;
     printf("%s\n", dir_name);

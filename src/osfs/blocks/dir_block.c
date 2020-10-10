@@ -14,7 +14,7 @@ Dir_block* dir_block_init(unsigned int block_num)
 
   for (unsigned int i = 0; i < total_entries; i++)
   {
-      dir_block->entries[i] = block_num + entry_size * i;
+      dir_block->entries[i] = block_num*2048 + entry_size * i; // Parte desde el bloque 0
   }
 
   return dir_block;
@@ -37,7 +37,7 @@ Dir_block_entry* dir_block_entry_init(Dir_block* dir_block, unsigned int entry_n
 
     // Sacamos los bits 2 a 22: numero de un bloque indice o directorio
     // Para el primer byte sin los primeros 2 bits hay que hacer un AND con 0011 1111
-    unsigned int first_chunk = buffer[0] & (unsigned int) (pow((double) 2, (double) 7) - 1);
+    unsigned int first_chunk = buffer[0] & (unsigned int) (pow((double) 2, (double) 6) - 1);
 
     // Para concatenar el primer chunk hay que multiplicarlo por 2^16 (16 espacios a la izq) 
     first_chunk = first_chunk * (unsigned int) (pow((double) 2, (double) 16));
