@@ -193,6 +193,7 @@ void os_mkdir(char* path){
     es dir_name. Basta con asignárselo a este nuevo bloque directorio
     según cómo se inserta la info.
     */
+   
 
     dir_name = slash;
     block_num = find_dir_entry_by_name(block_num, dir_name);
