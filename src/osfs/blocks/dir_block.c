@@ -5,6 +5,8 @@
 #include <math.h>
 #include <string.h>
 
+extern char* diskname;
+
 /** Inicializa una lista vacía */
 Dir_block* dir_block_init(unsigned int block_num)
 {
@@ -120,5 +122,53 @@ void print_all_entries_from_dir(unsigned int curr_block_num)
   }
   free(dir_block);
   return;
+}
+
+int find_empty_entry (unsigned int block_num)
+{
+  Dir_block*  dir_block = dir_block_init(block_num);
+  for (int i = 0; i < 64; i++)
+  {
+    Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
+    if (!dir_entry->valid) //significa que está vacío
+     {
+      printf("La entrada %i del bloque %i está vacía\n", i, block_num);
+      free(dir_entry);
+      free(dir_block);
+      return i;
+    } 
+      
+    free(dir_entry);
+  }
+  free(dir_block);
+  return 0;
+}
+
+void create_directory(unsigned int parent_block, unsigned int empty_block, int empty_entry, char* dir_name)
+{
+
+  //qué tenemos que escribir en el bloque vacío? -> Al parecer no. Solo el bitmap sabe que está ocupado.
+  //editar bitmap
+
+  //En la entrada vacía del bloque padre, escribir:
+  //tipo (2)
+  //"Puntero" al bloque directorio (empty_block)
+  //nombre (pasarlo a binario)
+
+
+  //vamos a editar el bitmap (bloque 65)
+
+  FILE * pFile;
+  pFile = fopen("test.bin", "wb");
+  fputs("This is an apple.", pFile);
+  fseek(pFile, 9, SEEK_SET);
+  fputs(" sam", pFile);
+  fclose(pFile);
+  return 0;
+
+
+  
+
+
 }
 

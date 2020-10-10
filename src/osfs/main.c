@@ -15,7 +15,7 @@ extern char* diskname;
 
 int main(int argc, char *argv[])
 {
-    // create_test_bin();
+    create_test_bin();
     os_mount(argv[1]);
     // os_exists(argv[1]);
     // os_bitmap(1, false);

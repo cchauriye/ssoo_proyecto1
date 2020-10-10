@@ -155,47 +155,43 @@ void os_ls(char* path){
 void os_mkdir(char* path){
 
     //Tenemos que encontrar un bloque vacío en el bitmap
+    int founded = 0;
+    int empty_block;
     long int buff_size = BLOCK_SIZE;
     unsigned char buffer[buff_size];
     int num = 1;
-    for (int i = 1; i < 2; i++)
+    while (num < 2048 && founded==0)
     {
         read_from_position(BLOCK_SIZE*num, buffer, buff_size); 
-        print_binary_buffer(buffer, buff_size);
-       
-        // for(int i = 0; i < 30; i++) {
-        //     int z = 128, oct = buffer[i];
-        //     while (z > 0)
-        //     {
-        //         if (!(oct & z))
-        //             printf("Bloque vacío.\nBLOCK_NUM = %i \nBYTE: %i\n (valor de z: %i)\n\n", num, i, z );
-        //             //fprintf(stderr, "1");
-        //         z >>= 1;
-        //     }
-        //     fprintf(stderr, "\n");
-
-        for(int i = 0; i < 20; i++) {
-            int z = 128, oct = buffer[i];
-            while (z > 0)
-            {
-                if (oct & z)
-                    fprintf(stderr, "1");
-                else
-                    fprintf(stderr, "0");
-                    //printf("Bloque vacío.\nBLOCK_NUM = %i \nBYTE: %i\n(valor de z: %i)\n\n", num, i, z);
-                z >>= 1;
+    int i = 0;
+       while(i < buff_size && founded==0) {
+        int bit = 0;
+        int z = 128, oct = buffer[i];
+        int nada;
+        while (z > 0)
+        {
+            if (oct & z){
+                nada = 10;
             }
-            fprintf(stderr, "\n");
-           
-        }  
-        num ++; 
-
-      
+            else{
+                printf("Bloque vacío!, BLOCK_NUM = %i, BYTE: %i, (valor de z: %i, bit: %i)\n", num, i, z, bit);
+                // Transformar num, i y z en el numero de bloque vacio
+                empty_block = 2048*(num-1)*8 + 8*(i) + bit;
+                printf("Equivale al bloque numero: %i",empty_block);
+                founded = 1;
+                break;
+            }
+            z >>= 1;
+            bit++;
+        }
+        fprintf(stderr, "\n");
+    i++;
+    }     
+    num ++;  
     }
-
-    
-
+  
    
+    
 
     char *slash = path;
     char* dir_name;
@@ -223,6 +219,18 @@ void os_mkdir(char* path){
     buscar una entrada vacía para asignarle la dirección de memoria
     del bloque vacío que encontramos arriba
     */
+    int parent_block = block_num;
+    int empty_entry = find_empty_entry(parent_block);
+    //printf("entrada: %i\n", empty_entry);
+    
+    dir_name = slash; //en caracter 
+
+    if (empty_entry){
+        create_directory(empty_block, parent_block, empty_entry, dir_name);
+    }
+    else{
+        printf("No hay más espacio para almacenar dentro de esta carpeta");
+    }
 
 
     /*
