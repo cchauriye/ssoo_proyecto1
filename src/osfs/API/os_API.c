@@ -93,7 +93,7 @@ void create_test_bin(){
     fclose(fp);
 }
 
-// Imprimir bitmap
+// Imprimir bitmap  AL FINAL ARREGLAR A LA CANTIDAD DE BYTES CORRECTA
 void os_bitmap(unsigned num, bool hex){
     long int buff_size = 20;
     unsigned char buffer[buff_size];
@@ -123,25 +123,29 @@ int os_exists(char* path){
     return 1;
 }
 
-// Imprimir nombres de archivos en el path dado
+// Imprimir nombres de archivos en el path dado haciendo split del path
 void os_ls(char* path){
-
-}
-
-// Split del path
-char* dir_name_from_path(char* path){
     char *slash = path;
     char* dir_name;
     char* leftover;
+    int block_num = 0;
+    int counter = 1;
     while(strpbrk(slash+1, "\\/")){
         slash = strpbrk(slash+1, "\\/");
         dir_name = strndup(path, slash - path);
         leftover = strdup(slash+1);
-        printf("%s\n", dir_name);
+        printf("Dir %i: %s\n", counter, dir_name);
         path = leftover;
         slash = leftover;
+        block_num = find_dir_entry_by_name(block_num, dir_name);
+        if(block_num == 0){
+            return;
+        }
+        counter++;
     };
     dir_name = slash;
-    printf("%s\n", dir_name);
-    return dir_name;
+    block_num = find_dir_entry_by_name(block_num, dir_name);
+    printf("Dir %i: %s\n", counter, dir_name);
+    print_files_from_dir(block_num, dir_name);
+    return;
 }

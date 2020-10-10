@@ -24,5 +24,9 @@ struct dir_block_entry
 /** Inicializa un bloque directorio */
 Dir_block* dir_block_init(unsigned int block_number);
 Dir_block_entry* dir_block_entry_init(Dir_block* dir_block, unsigned int entry_num);
+
 /** Busca un name en las entradas de directorio de un bloque de directorio, retorna el num de bloque o 0*/
-unsigned int find_dir_entry_by_name(Dir_block* dir_block, char* name);
+unsigned int find_dir_entry_by_name(unsigned int curr_block_num, char* name);
+
+void print_all_entries_from_dir(unsigned int curr_block_num);
+void print_files_from_dir(unsigned int curr_block_num, char* name);
