@@ -141,54 +141,56 @@ int find_empty_entry (unsigned int block_num)
     free(dir_entry);
   }
   free(dir_block);
-  return 0;
+  return -1;
 }
 
 void create_directory(unsigned int parent_block, unsigned int empty_block, int empty_entry, char* dir_name)
 {
 
-  //qué tenemos que escribir en el bloque vacío? -> Al parecer no. Solo el bitmap sabe que está ocupado.
-  //editar bitmap
-
-  //En la entrada vacía del bloque padre, escribir:
-  //tipo (2)
-  //"Puntero" al bloque directorio (empty_block)
-  //nombre (pasarlo a binario)
-
-
-  
-
   FILE * pFile;
   pFile = fopen("test.bin", "wb");
+  // Vamos a editar el bitmap (bloque 65)
+  unsigned int start = 2048 + empty_block/8; // Donde parte el byte que queremos modificar
+  int bit_offset = empty_block % 8; // Resto es 1
+  int z = 128 >> bit_offset;
+  printf("z: %i\n", z);
 
-  //vamos a editar el bitmap (bloque 65)
-  int start = 2048*8 + empty_block;
-  int value = 1;
-  fseek(pFile, start, SEEK_SET);
-  fwrite((const void*) & value, sizeof(int), 1, pFile);
+  // Vamos a leer el Byte que queremos modificar
+  long int buff_size = 1;
+  unsigned char buffer[buff_size];
+  read_from_position(start, buffer, buff_size);
 
-  //editar directorio padre. El start es en la entrada.
-  //escribimos el tipo (2):
-  start = 2048*8*parent_block +  32*8*empty_entry;
-  fseek(pFile, start, SEEK_SET);
-  value = 2;
-  fwrite((const void*) & value, sizeof(int), 1, pFile);
+  // Modificamos el bit que queremos
+  unsigned char byte_to_modify = buffer[0];
+  printf("El byte antes es: %i\n", byte_to_modify);
+  byte_to_modify = byte_to_modify | z;
+  buffer[0] = byte_to_modify;
+  printf("El nuevo byte es: %i\n", byte_to_modify);
 
-  //escribimos puntero al bloque directorio vacío
-  start = start + 2;
-  fseek(pFile, start, SEEK_SET);
-  unsigned int num = 2048*8 * empty_block;  //(revisar que sean 22 bits)
-  fwrite((const void*) & num, sizeof(unsigned int), 1, pFile);
+  // int value = 1;
+  
+  // fseek(pFile, start, SEEK_SET);
+  // fwrite((const void*) & value, sizeof(int), 1, pFile);
+  //fwrite(buffer, 1, 1, pFile);
+
+  // // Editar directorio padre. El start es en la entrada.
+  // // Escribimos el tipo (2):
+  // start = 2048*8*parent_block +  32*8*empty_entry;
+  // fseek(pFile, start, SEEK_SET);
+  // value = 2;
+  // fwrite((const void*) & value, sizeof(int), 1, pFile);
+
+  // // Escribimos puntero al bloque directorio vacío
+  // start = start + 2;
+  // fseek(pFile, start, SEEK_SET);
+  // unsigned int num = 2048*8 * empty_block;  //(revisar que sean 22 bits)
+  // fwrite((const void*) & num, sizeof(unsigned int), 1, pFile);
 
 
-  //escribimos nombre directorio
-  start = start + 22;
-  fseek(pFile, start, SEEK_SET);
-  fwrite(dir_name, sizeof(dir_name), 1, pFile);
-
-
-
- 
+  // //escribimos nombre directorio
+  // start = start + 22;
+  // fseek(pFile, start, SEEK_SET);
+  // fwrite(dir_name, sizeof(dir_name), 1, pFile);
   
   fclose(pFile);
   return 0;

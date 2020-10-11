@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     os_exists(argv[1]);
     // os_bitmap(1, false);
     //os_ls("folder/god");
-    //os_bitmap(1, false);
+    os_bitmap(1, false);
     os_mkdir("folder/god/hola");
     // Dir_block* root_dir = dir_block_init(0);
     // Dir_block_entry* first_entry = dir_block_entry_init(root_dir, 0);

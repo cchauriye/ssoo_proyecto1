@@ -190,8 +190,6 @@ void os_mkdir(char* path){
     num ++;  
     }
   
-   
-    
 
     char *slash = path;
     char* dir_name;
@@ -232,7 +230,7 @@ void os_mkdir(char* path){
         printf("int dir name: %d \n", int_dir_name);
     }
 
-    create_directory(empty_block, parent_block, empty_entry, dir_name);
+    create_directory(parent_block, empty_block, empty_entry, dir_name);
     //char* binary_name = stringToBinary(dir_name);
     //printf("nombre en binario: %s\n", binary_name);
 
