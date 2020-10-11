@@ -17,10 +17,10 @@ int main(int argc, char *argv[])
 {
     create_test_bin();
     os_mount(argv[1]);
-    // os_exists(argv[1]);
+    os_exists(argv[1]);
     // os_bitmap(1, false);
-    os_ls("folder/god");
-    os_bitmap(1, false);
+    //os_ls("folder/god");
+    //os_bitmap(1, false);
     os_mkdir("folder/god/hola");
     // Dir_block* root_dir = dir_block_init(0);
     // Dir_block_entry* first_entry = dir_block_entry_init(root_dir, 0);
@@ -28,5 +28,10 @@ int main(int argc, char *argv[])
     // print_all_entries_from_dir(285598);
     // free(root_dir);
     // free(first_entry);
+
+    // long int buff_size = 200;
+    // unsigned char buffer[buff_size];
+    // read_from_position(0, buffer, buff_size);
+    // print_binary_buffer(buffer, buff_size);
     return 0;
 }

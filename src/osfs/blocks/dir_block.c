@@ -156,13 +156,40 @@ void create_directory(unsigned int parent_block, unsigned int empty_block, int e
   //nombre (pasarlo a binario)
 
 
-  //vamos a editar el bitmap (bloque 65)
+  
 
   FILE * pFile;
   pFile = fopen("test.bin", "wb");
-  fputs("This is an apple.", pFile);
-  fseek(pFile, 9, SEEK_SET);
-  fputs(" sam", pFile);
+
+  //vamos a editar el bitmap (bloque 65)
+  int start = 2048*8 + empty_block;
+  int value = 1;
+  fseek(pFile, start, SEEK_SET);
+  fwrite((const void*) & value, sizeof(int), 1, pFile);
+
+  //editar directorio padre. El start es en la entrada.
+  //escribimos el tipo (2):
+  start = 2048*8*parent_block +  32*8*empty_entry;
+  fseek(pFile, start, SEEK_SET);
+  value = 2;
+  fwrite((const void*) & value, sizeof(int), 1, pFile);
+
+  //escribimos puntero al bloque directorio vacío
+  start = start + 2;
+  fseek(pFile, start, SEEK_SET);
+  unsigned int num = 2048*8 * empty_block;  //(revisar que sean 22 bits)
+  fwrite((const void*) & num, sizeof(unsigned int), 1, pFile);
+
+
+  //escribimos nombre directorio
+  start = start + 22;
+  fseek(pFile, start, SEEK_SET);
+  fwrite(dir_name, sizeof(dir_name), 1, pFile);
+
+
+
+ 
+  
   fclose(pFile);
   return 0;
 
@@ -172,3 +199,60 @@ void create_directory(unsigned int parent_block, unsigned int empty_block, int e
 
 }
 
+
+//https://stackoverflow.com/questions/41384262/convert-string-to-binary-in-c
+char* stringToBinary(char* s)
+ {
+    if(s == NULL) return 0; /* no input string */
+    size_t len = strlen(s);
+    char *binary = malloc(len*8 + 1); // each char is one byte (8 bits) and + 1 at the end for null terminator
+    binary[0] = '\0';
+    for(size_t i = 0; i < len; ++i) {
+        char ch = s[i];
+        for(int j = 7; j >= 0; --j){
+            if(ch & (1 << j)) {
+                strcat(binary,"1");
+            } else {
+                strcat(binary,"0");
+            }
+        }
+    }
+    return binary;
+}
+
+char* decimal_to_binary(int n)
+{
+  int c, d, t;
+  char *p;
+
+  t = 0;
+  p = (char*)malloc(32+1);
+
+  if (p == NULL)
+    exit(EXIT_FAILURE);
+
+  for (c = 31 ; c >= 0 ; c--)
+  {
+    d = n >> c;
+
+    if (d & 1)
+      *(p+t) = 1 + '0';
+    else
+      *(p+t) = 0 + '0';
+
+    t++;
+  }
+  *(p+t) = '\0';
+
+  return  p;
+}
+
+char* itob(int i) {
+      static char bits[8] = {'0','0','0','0','0','0','0','0'};
+      int bits_index = 7;
+      while ( i > 0 ) {
+         bits[bits_index--] = (i & 1) + '0';
+         i = ( i >> 1);
+      }
+      return bits;
+   }

@@ -224,13 +224,24 @@ void os_mkdir(char* path){
     //printf("entrada: %i\n", empty_entry);
     
     dir_name = slash; //en caracter 
+  
+    
+    printf("dir_name: %s\n", dir_name);
+    for (int i=0; i < sizeof(dir_name); i++){
+        int int_dir_name= dir_name[i];
+        printf("int dir name: %d \n", int_dir_name);
+    }
 
-    if (empty_entry){
-        create_directory(empty_block, parent_block, empty_entry, dir_name);
-    }
-    else{
-        printf("No hay más espacio para almacenar dentro de esta carpeta");
-    }
+    create_directory(empty_block, parent_block, empty_entry, dir_name);
+    //char* binary_name = stringToBinary(dir_name);
+    //printf("nombre en binario: %s\n", binary_name);
+
+    // if (empty_entry){
+    //     create_directory(empty_block, parent_block, empty_entry, binary_name);
+    // }
+    // else{
+    //     printf("No hay más espacio para almacenar dentro de esta carpeta");
+    // }
 
 
     /*
