@@ -138,7 +138,7 @@ void os_ls(char* path){
         path = leftover;
         slash = leftover;
         block_num = find_dir_entry_by_name(block_num, dir_name);
-        if(block_num == 0){
+        if(block_num == -1){
             return;
         }
         counter++;
@@ -163,30 +163,30 @@ void os_mkdir(char* path){
     while (num < 2048 && founded==0)
     {
         read_from_position(BLOCK_SIZE*num, buffer, buff_size); 
-    int i = 0;
-       while(i < buff_size && founded==0) {
-        int bit = 0;
-        int z = 128, oct = buffer[i];
-        int nada;
-        while (z > 0)
-        {
-            if (oct & z){
-                nada = 10;
+        int i = 0;
+        while(i < buff_size && founded==0) {
+            int bit = 0;
+            int z = 128, oct = buffer[i];
+            int nada;
+            while (z > 0)
+            {
+                if (oct & z){
+                    nada = 10;
+                }
+                else{
+                    printf("Bloque vacío! Bloque de bitmap = %i, BYTE: %i, (valor de z: %i, bit: %i)\n", num, i, z, bit);
+                    // Transformar num, i y z en el numero de bloque vacio
+                    empty_block = 2048*(num-1)*8 + 8*(i) + bit;
+                    printf("Equivale al bloque numero: %i\n", empty_block);
+                    founded = 1;
+                    break;
+                }
+                z >>= 1;
+                bit++;
             }
-            else{
-                printf("Bloque vacío!, BLOCK_NUM = %i, BYTE: %i, (valor de z: %i, bit: %i)\n", num, i, z, bit);
-                // Transformar num, i y z en el numero de bloque vacio
-                empty_block = 2048*(num-1)*8 + 8*(i) + bit;
-                printf("Equivale al bloque numero: %i",empty_block);
-                founded = 1;
-                break;
-            }
-            z >>= 1;
-            bit++;
-        }
         fprintf(stderr, "\n");
-    i++;
-    }     
+        i++;
+        }     
     num ++;  
     }
   
@@ -194,7 +194,7 @@ void os_mkdir(char* path){
     char *slash = path;
     char* dir_name;
     char* leftover;
-    int block_num = 0;
+    int block_num;
     int counter = 1;
 
     //iteramos en el path
@@ -206,12 +206,12 @@ void os_mkdir(char* path){
         path = leftover;
         slash = leftover;
         block_num = find_dir_entry_by_name(block_num, dir_name);
-        if(block_num == 0){
-            return;
-        }
+        // if(block_num == -1){
+        //     return;
+        // }
         counter++;
     };
-
+    printf("Blocknum: %i\n", block_num);
     /*
     Tenemos el directorio anterior (blocknum), debemos 
     buscar una entrada vacía para asignarle la dirección de memoria
@@ -223,12 +223,8 @@ void os_mkdir(char* path){
     
     dir_name = slash; //en caracter 
   
-    
-    printf("dir_name: %s\n", dir_name);
-    for (int i=0; i < sizeof(dir_name); i++){
-        int int_dir_name= dir_name[i];
-        printf("int dir name: %d \n", int_dir_name);
-    }
+    printf("Dir name: %s\n", dir_name);
+    printf("Empty block: %i\n", empty_block);
 
     create_directory(parent_block, empty_block, empty_entry, dir_name);
     //char* binary_name = stringToBinary(dir_name);

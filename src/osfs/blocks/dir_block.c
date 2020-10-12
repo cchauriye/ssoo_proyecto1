@@ -90,7 +90,7 @@ unsigned int find_dir_entry_by_name(unsigned int curr_block_num, char* name)
     free(dir_entry);
   }
   free(dir_block);
-  return 0;
+  return -1;
 }
 
 void print_files_from_dir(unsigned int curr_block_num, char* name)
@@ -147,12 +147,11 @@ int find_empty_entry (unsigned int block_num)
 void create_directory(unsigned int parent_block, unsigned int empty_block, int empty_entry, char* dir_name)
 {
 
-  FILE * pFile;
-  pFile = fopen("test.bin", "wb");
   // Vamos a editar el bitmap (bloque 65)
   unsigned int start = 2048 + empty_block/8; // Donde parte el byte que queremos modificar
   int bit_offset = empty_block % 8; // Resto es 1
   int z = 128 >> bit_offset;
+  printf("Start: %i\n", start);
   printf("z: %i\n", z);
 
   // Vamos a leer el Byte que queremos modificar
@@ -166,13 +165,10 @@ void create_directory(unsigned int parent_block, unsigned int empty_block, int e
   byte_to_modify = byte_to_modify | z;
   buffer[0] = byte_to_modify;
   printf("El nuevo byte es: %i\n", byte_to_modify);
-
-  // int value = 1;
-  
-  // fseek(pFile, start, SEEK_SET);
-  // fwrite((const void*) & value, sizeof(int), 1, pFile);
-  //fwrite(buffer, 1, 1, pFile);
-
+  FILE * pFile;
+  pFile = fopen(diskname, "wb");
+  fseek(pFile, start, SEEK_SET);
+  fwrite(buffer, 1, 1, pFile);
   // // Editar directorio padre. El start es en la entrada.
   // // Escribimos el tipo (2):
   // start = 2048*8*parent_block +  32*8*empty_entry;
@@ -193,12 +189,7 @@ void create_directory(unsigned int parent_block, unsigned int empty_block, int e
   // fwrite(dir_name, sizeof(dir_name), 1, pFile);
   
   fclose(pFile);
-  return 0;
-
-
-  
-
-
+  return;
 }
 
 
