@@ -69,6 +69,50 @@ Dir_block_entry* dir_block_entry_init(Dir_block* dir_block, unsigned int entry_n
     return dir_block_entry;
 }
 
+Index_block* index_block_init(unsigned int block_number, int first){
+    Index_block* index_block = malloc(sizeof(Index_block));
+
+    // Evaluamos si es el primero o no
+    index_block -> position = first;
+    long int buff_size; 
+
+    if(first==1){
+       // Leemos el primer byte
+      buff_size = 1;
+      unsigned char buffer1[buff_size];
+      read_from_position(2048*block_number, buffer1, buff_size);
+      index_block -> num_hardlinks = buffer1[0];
+
+      // Leemos los siguientes 7 bytes
+      buff_size = 7;
+      unsigned char buffer2[buff_size];
+      read_from_position(2048*block_number + 1, buffer2, buff_size);
+      index_block -> file_size = buffer2[0] | buffer2[1] | buffer2[2] | buffer2[3] | buffer2[4] | buffer2[5] | buffer2[6];
+    }
+    else{
+      buff_size = 8;
+      unsigned char buffer1[buff_size];
+      read_from_position(2048*block_number, buffer1, buff_size);
+      for(int i=0; i<2; i++){
+        index_block -> pointers[i] = buffer1[i] | buffer1[i+1] | buffer1[i+2] | buffer1[i+3];
+      }
+    }
+
+    // Leemos los siguientes 2036 bytes
+    buff_size = 2036;
+    unsigned char buffer3[buff_size];
+    read_from_position(2048*block_number + 8, buffer3, buff_size);
+    for(int i=0; i<2036; i++){
+      index_block -> pointers[i] = buffer3[i] | buffer3[i+1] | buffer3[i+2] | buffer3[i+3];
+    }
+
+    // Leemos los últimos 4 bytes
+    buff_size = 4;
+    unsigned char buffer4[buff_size];
+    read_from_position(2048*block_number + 2044, buffer4, buff_size);
+    index_block -> next_index = buffer4[0] | buffer4[1] | buffer4[2] | buffer4[3]
+}
+
 unsigned int find_dir_entry_by_name(unsigned int curr_block_num, char* name)
 {
   Dir_block* dir_block = dir_block_init(curr_block_num);
@@ -191,7 +235,6 @@ void create_directory(unsigned int parent_block, unsigned int empty_block, int e
   fclose(pFile);
   return;
 }
-
 
 //https://stackoverflow.com/questions/41384262/convert-string-to-binary-in-c
 char* stringToBinary(char* s)
