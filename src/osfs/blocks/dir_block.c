@@ -110,7 +110,22 @@ Index_block* index_block_init(unsigned int block_number, int first){
     buff_size = 4;
     unsigned char buffer4[buff_size];
     read_from_position(2048*block_number + 2044, buffer4, buff_size);
-    index_block -> next_index = buffer4[0] | buffer4[1] | buffer4[2] | buffer4[3]
+    index_block -> next_index = buffer4[0] | buffer4[1] | buffer4[2] | buffer4[3];
+    return index_block;
+}
+
+Data_block* data_block_init(unsigned int block_number){
+  Data_block* data_block = malloc(sizeof(Data_block));
+
+  unsigned int buff_size = 2048;
+  unsigned char buffer[buff_size];
+  read_from_position(2048*block_number, buffer, buff_size);
+
+  for (unsigned int i = 0; i < buff_size; i++)
+  {
+      data_block -> data[i] = buffer[i];
+  }
+  return data_block;
 }
 
 unsigned int find_dir_entry_by_name(unsigned int curr_block_num, char* name)
