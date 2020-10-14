@@ -95,19 +95,39 @@ void create_test_bin(){
 
 // Imprimir bitmap  AL FINAL ARREGLAR A LA CANTIDAD DE BYTES CORRECTA
 void os_bitmap(unsigned num, bool hex){
-    long int buff_size = 20;
+    long int buff_size = 15;
     unsigned char buffer[buff_size];
-    read_from_position(BLOCK_SIZE*num, buffer, buff_size);
-    if(hex){
-        unsigned char hex_buffer[buff_size * 2];
-        print_hex_buffer(hex_buffer, buffer, buff_size);
-        for (int i=0; i<buff_size*2; i++){
-            printf("%c", hex_buffer[i]);
+    if (num == 0){
+        for (int b = 1; b < 65; b++)
+        {
+            read_from_position(BLOCK_SIZE*b, buffer, buff_size);
+            if(hex){
+                unsigned char hex_buffer[buff_size * 2];
+                print_hex_buffer(hex_buffer, buffer, buff_size);
+                for (int i=0; i<buff_size*2; i++){
+                    printf("%c", hex_buffer[i]);
+                }
+                printf("\n");
+            }
+            else {
+                print_binary_buffer(buffer, buff_size);
+            }
         }
-        printf("\n");
+        
     }
     else {
-        print_binary_buffer(buffer, buff_size);
+        read_from_position(BLOCK_SIZE*num, buffer, buff_size);
+        if(hex){
+            unsigned char hex_buffer[buff_size * 2];
+            print_hex_buffer(hex_buffer, buffer, buff_size);
+            for (int i=0; i<buff_size*2; i++){
+                printf("%c", hex_buffer[i]);
+            }
+            printf("\n");
+        }
+        else {
+            print_binary_buffer(buffer, buff_size);
+        }
     }
 }
 
@@ -192,7 +212,7 @@ int os_mkdir(char* path){
     char *slash = path;
     char* dir_name;
     char* leftover;
-    int block_num;
+    int block_num = 0;
     int counter = 1;
 
     //iteramos en el path
@@ -210,6 +230,10 @@ int os_mkdir(char* path){
         counter++;
     };
     printf("Blocknum: %i\n", block_num);
+    if (block_num == -1) {
+        // printf("Error: Path no valido.\n");
+        return 1;
+    }
     /*
     Tenemos el directorio anterior (blocknum), debemos 
     buscar una entrada vacía para asignarle la dirección de memoria

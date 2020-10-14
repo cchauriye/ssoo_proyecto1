@@ -211,6 +211,7 @@ void create_directory(unsigned int parent_block, unsigned int empty_block, int e
   int z = 128 >> bit_offset;
   printf("Start: %i\n", start);
   printf("z: %i\n", z);
+  printf("Parent block: %i\n", parent_block);
 
   // Vamos a leer el Byte que queremos modificar
   long int buff_size = 1;
@@ -238,9 +239,9 @@ void create_directory(unsigned int parent_block, unsigned int empty_block, int e
   long int result = value | new_block_pointer;
   unsigned char buffer1[3];
   printf("New block: %li\n", result);
-  buffer1[0] = result & 0b00000000111111110000000000000000 >> 16;
-  buffer1[1] = result & 0b00000000000000001111111100000000 >> 8;
-  buffer1[2] = result & 0b00000000000000000000000011111111;
+  buffer1[0] = (result & 0b00000000111111110000000000000000) >> 16;
+  buffer1[1] = (result & 0b00000000000000001111111100000000) >> 8;
+  buffer1[2] = (result & 0b00000000000000000000000011111111);
   printf("Número de bloque: \n%i \n%i \n%i", buffer1[0], buffer1[1], buffer1[2]);
   fwrite(buffer1, 3, 1, pFile);
 
