@@ -1,5 +1,11 @@
 #pragma once
 #include <stdbool.h>
+#include "../blocks/dir_block.h"
+
+// Definición de osFile
+typedef struct osFile{
+    Index_block* index_pointer;
+} osFile;
 
 void read_from_position(long int start, unsigned char* buffer, long int buff_size);
 void print_hex_buffer(unsigned char* hex_buffer, unsigned char* buffer, long int buff_size);

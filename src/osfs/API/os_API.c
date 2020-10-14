@@ -134,7 +134,7 @@ void os_ls(char* path){
         slash = strpbrk(slash+1, "\\/");
         dir_name = strndup(path, slash - path);
         leftover = strdup(slash+1);
-        printf("Dir %i: %s\n", counter, dir_name);
+        //printf("Dir %i: %s\n", counter, dir_name);
         path = leftover;
         slash = leftover;
         block_num = find_dir_entry_by_name(block_num, dir_name);
@@ -145,14 +145,12 @@ void os_ls(char* path){
     };
     dir_name = slash;
     block_num = find_dir_entry_by_name(block_num, dir_name);
-    printf("sali while hehe Dir %i: %s\n", counter, dir_name);
     print_files_from_dir(block_num, dir_name);
     return;
 }
 
-
 //crear un direcotrio con el path dado
-void os_mkdir(char* path){
+int os_mkdir(char* path){
 
     //Tenemos que encontrar un bloque vacío en el bitmap
     int founded = 0;
@@ -217,6 +215,7 @@ void os_mkdir(char* path){
     buscar una entrada vacía para asignarle la dirección de memoria
     del bloque vacío que encontramos arriba
     */
+
     int parent_block = block_num;
     int empty_entry = find_empty_entry(parent_block);
     //printf("entrada: %i\n", empty_entry);
@@ -227,31 +226,41 @@ void os_mkdir(char* path){
     printf("Empty block: %i\n", empty_block);
 
     create_directory(parent_block, empty_block, empty_entry, dir_name);
-    //char* binary_name = stringToBinary(dir_name);
-    //printf("nombre en binario: %s\n", binary_name);
-
-    // if (empty_entry){
-    //     create_directory(empty_block, parent_block, empty_entry, binary_name);
-    // }
-    // else{
-    //     printf("No hay más espacio para almacenar dentro de esta carpeta");
-    // }
-
-
-    /*
-    dir_name = slash;
-    Tenemos el nombre del directorio que queremos crear,
-    es dir_name. Basta con asignárselo a este nuevo bloque directorio
-    según cómo se inserta la info.
-    */
-
-   
 
     dir_name = slash;
     block_num = find_dir_entry_by_name(block_num, dir_name);
     printf("Dir %i: %s\n", counter, dir_name);
     print_files_from_dir(block_num, dir_name);
-    return;
-
-    
+    return 0;
 }
+
+// osFile* os_open(char* path, char mode){
+//     if(strcmp(mode,"r")){
+//         char* slash = path;
+//         char* dir_name;
+//         char* leftover;
+//         int block_num = 0;
+//         int counter = 1;
+//         while(strpbrk(slash+1, "\\/")){
+//             slash = strpbrk(slash+1, "\\/");
+//             dir_name = strndup(path, slash - path);
+//             leftover = strdup(slash+1);
+//             //printf("Dir %i: %s\n", counter, dir_name);
+//             path = leftover;
+//             slash = leftover;
+//             block_num = find_dir_entry_by_name(block_num, dir_name);
+//             if(block_num == -1){
+//                 return; // si se sale es que el archivo no existe
+//             }
+//             counter++;
+//         };
+//         dir_name = slash;
+//         block_num = find_dir_entry_by_name(block_num, dir_name);
+
+//         // si llegamos acá, tenemos el número de bloque donde está el bloque de directorio.
+//     }
+
+//     if(strcmp(mode,"w")){
+
+//     }
+// }

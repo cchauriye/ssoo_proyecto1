@@ -19,14 +19,15 @@ int main(int argc, char *argv[])
     os_mount(argv[1]);
     os_exists(argv[1]);
     // os_bitmap(1, false);
-    //os_ls("folder/god");
-    os_bitmap(1, false);
+    // os_ls("folder");
+    // os_bitmap(1, false);
+    print_all_entries_from_dir(536679);
     os_mkdir("folder/yass");
-    os_bitmap(1, false);
+    // os_bitmap(1, false);
     // Dir_block* root_dir = dir_block_init(0);
     // Dir_block_entry* first_entry = dir_block_entry_init(root_dir, 0);
     // unsigned int block_num = find_dir_entry_by_name(root_dir, "folder");
-    // print_all_entries_from_dir(285598);
+    print_all_entries_from_dir(536679);
     // free(root_dir);
     // free(first_entry);
 
