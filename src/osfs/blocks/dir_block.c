@@ -151,7 +151,7 @@ Data_block* data_block_init(unsigned int block_number){
   return data_block;
 }
 
-unsigned long int find_dir_entry_by_name(unsigned int curr_block_num, char* name)
+unsigned long int find_block_by_name(unsigned int curr_block_num, char* name)
 {
   Dir_block* dir_block = dir_block_init(curr_block_num);
   // printf("estoy buscando el name: %s \n", name);
@@ -168,6 +168,29 @@ unsigned long int find_dir_entry_by_name(unsigned int curr_block_num, char* name
       free(dir_entry);
       free(dir_block);
       return block_num;
+    }
+    free(dir_entry);
+  }
+  free(dir_block);
+  return -1;
+}
+
+unsigned long int find_entry_num_by_name(unsigned int curr_block_num, char* name)
+{
+  Dir_block* dir_block = dir_block_init(curr_block_num);
+  // printf("estoy buscando el name: %s \n", name);
+  for (int i = 0; i < 64; i++)
+  {
+    Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
+    // printf("name del entry %i es %s \n", i, dir_entry->name);
+    //printf("\n");
+
+    //  Verifico que sea el nombre correcto y que apunte a un directorio
+    if(strcmp(name, dir_entry->name) == 0 && dir_entry->valid != 0) {
+      // printf("lo encontre!\n");
+      free(dir_entry);
+      free(dir_block);
+      return i;
     }
     free(dir_entry);
   }

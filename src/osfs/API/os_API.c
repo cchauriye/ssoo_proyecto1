@@ -103,7 +103,7 @@ int os_mkdir(char* path){
     int empty_entry = find_empty_entry(parent_block_num);
 
     // Creamos el directorio
-    create_directory(parent_block_num, empty_block, empty_entry, dir_name);
+    create_dir_entry(parent_block_num, empty_block, empty_entry, dir_name, 2);
     return 0;
 }
 
@@ -158,7 +158,30 @@ osFile* os_open(char* path, char mode) {
         
         // Revisamos que no existia el archivo
         if(index_block_num == -1){
-            
+            // Buscamos un bloque vacio en el bitmap y lo marcamos como ocupado
+            unsigned long int empty_block = find_empty_block();
+
+            // Buscamos el bloque dir donde va a ir este archivo
+            unsigned long int parent_dir_block = find_parent_block_by_path(path);
+            // Buscamos un empty dir entry en el directorio
+            int empty_entry = find_empty_entry(parent_dir_block);
+            // Sacamos el nombre del archivo
+            char *slash = path;
+            char* dir_name;
+            char* file_name;
+            char* leftover;
+            while(strpbrk(slash+1, "\\/")){
+                slash = strpbrk(slash+1, "\\/");
+                dir_name = strndup(path, slash - path);
+                leftover = strdup(slash+1);
+                path = leftover;
+                slash = leftover;
+            };
+            file_name = slash;
+            printf("file name: %s\n", file_name);
+            // Setiamos el bloque indice
+            create_dir_entry(parent_dir_block, empty_block, empty_entry, file_name, 1);
+
 
         }
 
@@ -173,31 +196,48 @@ int os_close(osFile* file_desc){
 }
 
 int os_rm(char* path){
-    char *slash = path;
-    char* dir_name;
-    char* file_name;
-    char* leftover;
-    unsigned long int index_block_num = 0;
-    unsigned long int dir_block_num = 0; // guardo el número del bloque que tiene la entrada
-    while(strpbrk(slash+1, "\\/")){
-        slash = strpbrk(slash+1, "\\/");
-        dir_name = strndup(path, slash - path);
-        leftover = strdup(slash+1);
-        path = leftover;
-        slash = leftover;
-        dir_block_num = find_dir_entry_by_name(dir_block_num, dir_name);
-        if(dir_block_num == -1){
-            return 0;
-        }
-    };
-    file_name = slash;
-    index_block_num = find_dir_entry_by_name(dir_block_num, file_name); // Retorna bloque índice
+    char path2[100];
+    strcpy(path2, path);
+    // Extract the first token
+    char* next_dir = strtok(path2, "/");
+    char* prev_dir;
+    // loop through the string to extract all other tokens
+    while( next_dir != NULL) {
+        prev_dir = next_dir;
+        next_dir = strtok(NULL, "/");
+    }
+    char* file_name = prev_dir;
+    
+    // Restamos 1 a los Hard Links
+    unsigned long int index_block_num = find_block_by_path(path);
+    unsigned long int start = BLOCK_SIZE*index_block_num;
+    unsigned char buffer[1];
+    read_from_position(start, buffer, 1);
+    int num_of_hl = buffer[0];
+    num_of_hl --;
+    buffer[0] = num_of_hl;
+    FILE * pFile;
+    pFile = fopen(diskname, "r+");
+    fseek(pFile, start, SEEK_SET);
+    fwrite(buffer, 1, 1, pFile);
+    fclose(pFile);
 
-    // Dejamos el bitmap del bloque indice en 0
-    modify_bitmap(index_block_num, 0);
+    // Vamos a modificar valid en dir entry
+    unsigned long int parent_block = find_parent_block_by_path(path);
+    int entry_block_num = find_entry_num_by_name(parent_block, file_name);
     
-    ////// Debemos borrar la entrada de directorio
-    
-    
+    start = BLOCK_SIZE*parent_block + entry_block_num*32;
+    read_from_position(start, buffer, 1);
+    print_binary_buffer(buffer, 1);
+    buffer[0] = buffer[0] & 0b00111111;
+    print_binary_buffer(buffer, 1);
+    pFile = fopen(diskname, "r+");
+    fseek(pFile, start, SEEK_SET);
+    fwrite(buffer, 1, 1, pFile);
+    fclose(pFile);
+
+     // Dejamos el bitmap del bloque indice en 0
+    modify_bitmap(entry_block_num, 0);
+
     return 0;
 }

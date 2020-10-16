@@ -55,7 +55,10 @@ Index_block* index_block_init(unsigned int block_number, int position);
 Data_block* data_block_init(unsigned int block_number);
 
 // Busca un name en las entradas de directorio de un bloque de directorio, retorna el num de bloque o 0
-unsigned long int find_dir_entry_by_name(unsigned int curr_block_num, char* name);
+unsigned long int find_block_by_name(unsigned int curr_block_num, char* name);
+
+// Busca un name en las entradas de directorio de un bloque de directorio, retorna el num de entry o 0
+unsigned long int find_entry_num_by_name(unsigned int curr_block_num, char* name);
 
 // Imprimer todas las entradas de un directorio (incluyendo las vacias)
 void print_all_entries_from_dir(unsigned int curr_block_num);

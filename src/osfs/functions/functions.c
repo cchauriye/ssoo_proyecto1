@@ -41,35 +41,6 @@ void modify_bitmap(unsigned long int block_num, int value){
     fclose(pFile);
 }
 
-void create_directory(unsigned long int parent_block, unsigned int empty_block, int empty_entry, unsigned char* dir_name)
-{
-    modify_bitmap(empty_block, 1);
-
-    FILE * pFile;
-    pFile = fopen(diskname, "r+");
-    // Editar directorio padre. El start es en la entrada.
-    // // Escribimos que es de tipo 2:
-    unsigned long int start = 2048*parent_block +  32*empty_entry;
-    fseek(pFile, start, SEEK_SET);
-    long int value = pow((double)2, (double)23); // 1 en la posición que queremos
-    unsigned long int new_block_pointer = empty_block; 
-    unsigned long int result = value | new_block_pointer;
-    unsigned char buffer1[3];
-    printf("New block: %li\n", result);
-    buffer1[0] = (result & 0b00000000111111110000000000000000) >> 16;
-    buffer1[1] = (result & 0b00000000000000001111111100000000) >> 8;
-    buffer1[2] = (result & 0b00000000000000000000000011111111);
-    printf("Número de bloque: \n%i \n%i \n%i", buffer1[0], buffer1[1], buffer1[2]);
-    fwrite(buffer1, 1, 3, pFile);
-
-    // // Escribimos nombre directorio
-    start = 2048*parent_block +  32*empty_entry + 3;
-    fseek(pFile, start, SEEK_SET);
-    fwrite(dir_name, sizeof(dir_name), 1, pFile);
-    fclose(pFile);
-    return;
-}
-
 long unsigned int find_block_by_path(char* path){
     char path2[100];
     strcpy(path2, path);
@@ -79,7 +50,7 @@ long unsigned int find_block_by_path(char* path){
     // loop through the string to extract all other tokens
     while( next_dir != NULL) {
         // printf( "next_dir: %s\n", next_dir ); //printing each token
-        block_num = find_dir_entry_by_name(block_num, next_dir);
+        block_num = find_block_by_name(block_num, next_dir);
         if (block_num == -1){
             return -1;
         }
@@ -206,8 +177,37 @@ long unsigned int find_parent_block_by_path(char* path){
     while( next_dir != NULL) {
         // printf( "next_dir: %s\n", next_dir ); //printing each token
         prev_block_num = block_num;
-        block_num = find_dir_entry_by_name(block_num, next_dir);
+        block_num = find_block_by_name(block_num, next_dir);
         next_dir = strtok(NULL, "/");
     }
     return prev_block_num;
+}
+
+void create_dir_entry(unsigned long int parent_block, unsigned int empty_block, int empty_entry, unsigned char* name, int type)
+{
+    modify_bitmap(empty_block, 1);
+
+    FILE * pFile;
+    pFile = fopen(diskname, "r+");
+    // Editar directorio padre. El start es en la entrada.
+    // // Escribimos que es de tipo 1:
+    unsigned long int start = 2048*parent_block +  32*empty_entry;
+    fseek(pFile, start, SEEK_SET);
+    long int value = pow((double)2, (double)(21 + type)); // 1 en la posición que queremos
+    unsigned long int new_block_pointer = empty_block; 
+    unsigned long int result = value | new_block_pointer;
+    unsigned char buffer1[3];
+    printf("New block: %li\n", result);
+    buffer1[0] = (result & 0b00000000111111110000000000000000) >> 16;
+    buffer1[1] = (result & 0b00000000000000001111111100000000) >> 8;
+    buffer1[2] = (result & 0b00000000000000000000000011111111);
+    printf("Número de bloque: \n%i \n%i \n%i", buffer1[0], buffer1[1], buffer1[2]);
+    fwrite(buffer1, 1, 3, pFile);
+
+    // // Escribimos nombre del archivo
+    start = 2048*parent_block +  32*empty_entry + 3;
+    fseek(pFile, start, SEEK_SET);
+    fwrite(name, sizeof(name), 1, pFile);
+    fclose(pFile);
+    return;
 }
