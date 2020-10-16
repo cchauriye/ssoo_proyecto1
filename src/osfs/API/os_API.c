@@ -7,90 +7,14 @@
 #include <unistd.h> 
 #include <stdlib.h>
 #include "os_API.h"
+#include "../functions/functions.h"
 
 char* diskname;
 unsigned int BLOCK_SIZE = 2048;
 
-// Lee el .bin desde una posición dada
-void read_from_position(long int start, unsigned char* buffer, long int buff_size)
-{
-    FILE* ptr = fopen(diskname, "rb");
-    if (!ptr)
-    {
-        printf("Unable to open file!");
-    }
-    fseek(ptr, start, SEEK_SET);
-    fread(buffer, sizeof(unsigned char), buff_size, ptr);
-    fclose(ptr);
-};
-
-// Imprimir buffer en binario
-void print_binary_buffer(unsigned char* buffer, long int buff_size)
-{
-    // for (int i = 0; i < buff_size; i++) {
-    //     printf("%i", buffer[i]);
-    // }
-    // printf("\n");
-    for(int i = 0; i < buff_size; i++) {
-        int z = 128, oct = buffer[i];
-        while (z > 0)
-        {
-            if (oct & z)
-                fprintf(stderr, "1");
-            else
-                fprintf(stderr, "0");
-            z >>= 1;
-        }
-        fprintf(stderr, "\n");
-    }
-}
-
-// Imprimir buffer en hexadecimal
-void print_hex_buffer(unsigned char* hex_buffer, unsigned char* buffer, long int buff_size)
-{ 
-    for (int i = 0; i < buff_size; i++) {
-        int dec_num = buffer[i];
-        int j = 2*i;
-        if (dec_num == 0) 
-        {
-            hex_buffer[j] = 48;
-            hex_buffer[j+1] = 48;
-        }
-        while(dec_num != 0) 
-        {    
-            // temporary variable to store remainder 
-            int temp  = 0; 
-            
-            // storing remainder in temp variable. 
-            temp = dec_num % 16; 
-            
-            // check if temp < 10 
-            if(temp < 10) 
-            { 
-                hex_buffer[j] = temp + 48;
-            } 
-            else
-            { 
-                hex_buffer[j] = temp + 55;
-            } 
-            j++; 
-            dec_num = dec_num/16; 
-        } 
-    }
-}
-
 // Establece como variable global la ruta local del disco
 void os_mount(char* disk){
     diskname = disk;
-}
-
-// Crear archivo binario de prueba
-void create_test_bin(){
-    FILE *fp;
-    unsigned char mibyte[8] = "10101010";
-    fp = fopen( "test.bin" , "wb" );
-    fwrite(mibyte, sizeof(mibyte), 1 , fp);
-    fclose(fp);
 }
 
 // Imprimir bitmap  AL FINAL ARREGLAR A LA CANTIDAD DE BYTES CORRECTA
@@ -133,158 +57,147 @@ void os_bitmap(unsigned num, bool hex){
 
 // Verificar si archivo existe.
 int os_exists(char* path){
-    struct stat s;
-    int err = stat(path, &s);
-    if(-1 == err)
+    if (find_block_by_path(path) == -1)
     {
-        printf("File does not exist.\n");
         return 0;
     }
     return 1;
 }
 
-// Imprimir nombres de archivos en el path dado haciendo split del path
 void os_ls(char* path){
-    char *slash = path;
-    char* dir_name;
-    char* leftover;
-    int block_num = 0;
-    int counter = 1;
-    while(strpbrk(slash+1, "\\/")){
-        slash = strpbrk(slash+1, "\\/");
-        dir_name = strndup(path, slash - path);
-        leftover = strdup(slash+1);
-        //printf("Dir %i: %s\n", counter, dir_name);
-        path = leftover;
-        slash = leftover;
-        block_num = find_dir_entry_by_name(block_num, dir_name);
-        if(block_num == -1){
-            return;
-        }
-        counter++;
-    };
-    dir_name = slash;
-    block_num = find_dir_entry_by_name(block_num, dir_name);
-    print_files_from_dir(block_num, dir_name);
-    return;
+    long unsigned int dir_block_num = find_block_by_path(path);
+    if (dir_block_num == -1){
+        return;
+    }
+    else{
+        print_files_from_dir(dir_block_num);
+    }
 }
 
 //crear un direcotrio con el path dado
-int os_mkdir(char* path){
-
-    //Tenemos que encontrar un bloque vacío en el bitmap
-    int founded = 0;
-    int empty_block;
-    long int buff_size = BLOCK_SIZE;
-    unsigned char buffer[buff_size];
-    int num = 1;
-    while (num < 2048 && founded==0)
-    {
-        read_from_position(BLOCK_SIZE*num, buffer, buff_size); 
-        int i = 0;
-        while(i < buff_size && founded==0) {
-            int bit = 0;
-            int z = 128, oct = buffer[i];
-            int nada;
-            while (z > 0)
-            {
-                if (oct & z){
-                    nada = 10;
-                }
-                else{
-                    printf("Bloque vacío! Bloque de bitmap = %i, BYTE: %i, (valor de z: %i, bit: %i)\n", num, i, z, bit);
-                    // Transformar num, i y z en el numero de bloque vacio
-                    empty_block = 2048*(num-1)*8 + 8*(i) + bit;
-                    printf("Equivale al bloque numero: %i\n", empty_block);
-                    founded = 1;
-                    break;
-                }
-                z >>= 1;
-                bit++;
-            }
-        fprintf(stderr, "\n");
-        i++;
-        }     
-    num ++;  
+int os_mkdir(char* path){  
+    // Buscamos un bloque vacio en el bitmap
+    unsigned long int empty_block = find_empty_block();
+    // Buscamos el bloque directorio donde tenemos que crear la entrada
+    unsigned long int parent_block_num = find_parent_block_by_path(path);
+    if (parent_block_num == -1) {
+        return 1;
     }
-  
 
     char *slash = path;
     char* dir_name;
+    char* file_name;
     char* leftover;
-    int block_num = 0;
-    int counter = 1;
-
-    //iteramos en el path
     while(strpbrk(slash+1, "\\/")){
         slash = strpbrk(slash+1, "\\/");
         dir_name = strndup(path, slash - path);
         leftover = strdup(slash+1);
-        printf("Dir %i: %s\n", counter, dir_name);
+        printf("leftover: %s\n", leftover);
         path = leftover;
         slash = leftover;
-        block_num = find_dir_entry_by_name(block_num, dir_name);
-        // if(block_num == -1){
-        //     return;
-        // }
-        counter++;
     };
-    printf("Blocknum: %i\n", block_num);
-    if (block_num == -1) {
-        // printf("Error: Path no valido.\n");
-        return 1;
-    }
-    /*
-    Tenemos el directorio anterior (blocknum), debemos 
-    buscar una entrada vacía para asignarle la dirección de memoria
-    del bloque vacío que encontramos arriba
-    */
-
-    int parent_block = block_num;
-    int empty_entry = find_empty_entry(parent_block);
-    //printf("entrada: %i\n", empty_entry);
-    
-    dir_name = slash; //en caracter 
-  
-    printf("Dir name: %s\n", dir_name);
-    printf("Empty block: %i\n", empty_block);
-
-    create_directory(parent_block, empty_block, empty_entry, dir_name);
-
     dir_name = slash;
-    block_num = find_dir_entry_by_name(block_num, dir_name);
-    printf("Dir %i: %s\n", counter, dir_name);
-    print_files_from_dir(block_num, dir_name);
+    printf("dir name: %s\n", dir_name);
+
+    // Buscamos una entrada vacia
+    int empty_entry = find_empty_entry(parent_block_num);
+
+    // Creamos el directorio
+    create_directory(parent_block_num, empty_block, empty_entry, dir_name);
     return 0;
 }
 
-// osFile* os_open(char* path, char mode){
-//     if(strcmp(mode,"r")){
-//         char* slash = path;
-//         char* dir_name;
-//         char* leftover;
-//         int block_num = 0;
-//         int counter = 1;
-//         while(strpbrk(slash+1, "\\/")){
-//             slash = strpbrk(slash+1, "\\/");
-//             dir_name = strndup(path, slash - path);
-//             leftover = strdup(slash+1);
-//             //printf("Dir %i: %s\n", counter, dir_name);
-//             path = leftover;
-//             slash = leftover;
-//             block_num = find_dir_entry_by_name(block_num, dir_name);
-//             if(block_num == -1){
-//                 return; // si se sale es que el archivo no existe
-//             }
-//             counter++;
-//         };
-//         dir_name = slash;
-//         block_num = find_dir_entry_by_name(block_num, dir_name);
+osFile* os_open(char* path, char mode) {
+    
+    osFile* file = malloc(sizeof(osFile));
+    // Modo lectura
+    if(mode == 'r') {
+        unsigned long int index_block_num = find_block_by_path(path);
+        printf("El index esta en el block num: %lu\n", index_block_num);
 
-//         // si llegamos acá, tenemos el número de bloque donde está el bloque de directorio.
-//     }
+        // Instanciamos el Index Block
+        Index_block* index_block = index_block_init(index_block_num, 1);
 
-//     if(strcmp(mode,"w")){
+        file ->index_block = index_block;
 
-//     }
-// }
+        // Calculamos cuantos data blocks usa
+        unsigned long int data_blocks_used = (index_block->file_size / BLOCK_SIZE);
+        if(index_block->file_size % BLOCK_SIZE) {
+            data_blocks_used += 1;
+        }
+        file->data_blocks_used = data_blocks_used;
+
+        // Claculamos cuantos Bloques de direccionamiento simple usa
+        unsigned long int bytes_used_for_pointers_to_data = (data_blocks_used * 4);
+        unsigned long int indirect_blocks_used = (bytes_used_for_pointers_to_data / BLOCK_SIZE);
+        if(bytes_used_for_pointers_to_data % BLOCK_SIZE) {
+            indirect_blocks_used += 1;
+        }
+        file->indirect_blocks_used = indirect_blocks_used;
+
+        // Calculamos cuantos bloques indice usa
+        unsigned long int index_blocks_used;
+        unsigned long int bytes_used_for_pointers_to_indirect = (indirect_blocks_used * 4);
+        if (bytes_used_for_pointers_to_indirect <= 2036){
+            index_blocks_used = 1;
+        }
+        else{
+            index_blocks_used = 1;
+            bytes_used_for_pointers_to_indirect -= 2036;
+            index_blocks_used += bytes_used_for_pointers_to_indirect / 2044;
+            if(bytes_used_for_pointers_to_indirect % 2044) {
+                index_blocks_used += 1;
+            }
+        }
+        file->index_blocks_used = index_blocks_used;
+    }
+
+    // Modo escritura
+    if(mode == 'w') {
+        unsigned long int index_block_num = find_block_by_path(path);
+        
+        // Revisamos que no existia el archivo
+        if(index_block_num == -1){
+            
+
+        }
+
+    }
+    return file;
+}
+
+int os_close(osFile* file_desc){
+    free(file_desc->index_block);
+    free(file_desc);
+    return 0;
+}
+
+int os_rm(char* path){
+    char *slash = path;
+    char* dir_name;
+    char* file_name;
+    char* leftover;
+    unsigned long int index_block_num = 0;
+    unsigned long int dir_block_num = 0; // guardo el número del bloque que tiene la entrada
+    while(strpbrk(slash+1, "\\/")){
+        slash = strpbrk(slash+1, "\\/");
+        dir_name = strndup(path, slash - path);
+        leftover = strdup(slash+1);
+        path = leftover;
+        slash = leftover;
+        dir_block_num = find_dir_entry_by_name(dir_block_num, dir_name);
+        if(dir_block_num == -1){
+            return 0;
+        }
+    };
+    file_name = slash;
+    index_block_num = find_dir_entry_by_name(dir_block_num, file_name); // Retorna bloque índice
+
+    // Dejamos el bitmap del bloque indice en 0
+    modify_bitmap(index_block_num, 0);
+    
+    ////// Debemos borrar la entrada de directorio
+    
+    
+    return 0;
+}
