@@ -48,9 +48,9 @@ int main(int argc, char *argv[])
     //os_bitmap(1, false);
 
     // Probar os_ls
-    os_ls("/folder/god");
+    //os_ls("/folder/god");
     print_all_entries_from_dir(536679);
-    os_hardlink("/folder/god/shrek.mp4", "/folder/nuevo.mp4");
+    os_hardlink("/folder/god/shrek.mp4", "/folder/nuevo2.mp4");
     //os_mkdir("/folder/nuebo");
     print_all_entries_from_dir(536679);
     
