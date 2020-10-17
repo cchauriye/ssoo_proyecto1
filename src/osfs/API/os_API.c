@@ -281,6 +281,13 @@ void os_hardlink(char*orig, char*dest){
 
 void os_rmdir(char*path, bool recursive){
     unsigned long int block_num = find_block_by_path(path);
+    printf("BLock_num: %i\n", block_num);
+    if (block_num == -1)
+    {
+        printf("La ruta proporcionada no es válida, no se han encontrado directorios con ese nombre\n");
+    }
+    else
+    {
     //Reviso si hay alguna entrada ocupada, si no hay borro el dir altiro, si hay reviso recursive
     Dir_block*  dir_block = dir_block_init(block_num);
     for (int i = 0; i < 64; i++)
@@ -313,19 +320,40 @@ void os_rmdir(char*path, bool recursive){
     modify_bitmap(block_num,0);
     printf("Modifica el bitmap\n");
     //2- Libero la entrada del directorio padre los 2 bit= 00 ¿Es necesario puntero a 0 y nombre a 0? 
-    unsigned long int parent_block = find_parent_block_by_path(path);
-    printf("AAA");
-    unsigned char* name = find_name_by_path(path); //ACA SE CAE,la funcion funciona solo con cosas con extencion tipo ejemplo.txt Hay que arreglara!!
-    printf("AAA");
-    unsigned long int entry = find_entry_num_by_name(parent_block,name); 
-    
-    unsigned long int start = 2048*parent_block +  32*entry;
-    unsigned int value = 0;
+    unsigned int parent_block = find_parent_block_by_path(path);
+    printf("AAA\n");
+    //unsigned char* name = find_name_by_path(path); //ACA SE CAE,la funcion funciona solo con cosas con extencion tipo ejemplo.txt Hay que arreglara!!
+    char *slash = path;
+    char* dir_name;
+    char* file_name;
+    char* leftover;
+    while(strpbrk(slash+1, "\\/")){
+        slash = strpbrk(slash+1, "\\/");
+        dir_name = strndup(path, slash - path);
+        leftover = strdup(slash+1);
+        printf("leftover: %s\n", leftover);
+        path = leftover;
+        slash = leftover;
+    };
+    printf("Dir name \n");
+    dir_name = slash;
+    printf("%s\n", dir_name);
+    unsigned long int  num_entry = find_entry_num_by_name(parent_block, dir_name);
+    printf("BUENARDO"); 
+    unsigned long int start = 2048*parent_block +  32*num_entry;
+    int value = 0;
+
     FILE * pFile;
+    
+    start = BLOCK_SIZE*parent_block + num_entry*32;
+    unsigned char buffer[1];
+    read_from_position(start, buffer, 1);
+    buffer[0] = buffer[0] & 0b00111111;
     pFile = fopen(diskname, "r+");
     fseek(pFile, start, SEEK_SET);
-    fwrite(value,1, 1, pFile);
-    fclose(pFile); 
+    fwrite(buffer, 1, 1, pFile);
+    fclose(pFile);
+    }
 
 
     

@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     // printf("hardlinks: %i\n", index->num_hardlinks);
     // free(index);
     // printf("-----OS RM--------\n");
-    // os_rm("/IMPORTANT.txt");
+    //os_rm("/IMPORTANT.txt");
     // os_ls("/");
     // Index_block* index2 = index_block_init(index_block, 1);
     // printf("hardlinks: %i\n", index2->num_hardlinks);
@@ -48,10 +48,11 @@ int main(int argc, char *argv[])
     //os_bitmap(1, false);
 
     // Probar os_ls
-    os_mkdir("/folder/ejemplo5");
-    //print_all_entries_from_dir(536679);
+    os_mkdir("/folder/ejemplo7");
+    print_all_entries_from_dir(536679);
     //os_hardlink("/folder/god/shrek.mp4", "/folder/nuevo.mp4");
-    os_rmdir("/folder/ejemplo5", false);
+    os_rmdir("/folder/ejemplo7", false);
+    printf("\n");
     print_all_entries_from_dir(536679);
     
 

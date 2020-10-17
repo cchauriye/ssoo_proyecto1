@@ -179,15 +179,14 @@ unsigned long int find_entry_num_by_name(unsigned int curr_block_num, char* name
 {
   Dir_block* dir_block = dir_block_init(curr_block_num);
   // printf("estoy buscando el name: %s \n", name);
-  for (int i = 0; i < 64; i++)
+  for (unsigned long int i = 0; i < 64; i++)
   {
     Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
     // printf("name del entry %i es %s \n", i, dir_entry->name);
-    //printf("\n");
+    // printf("\n");
 
     //  Verifico que sea el nombre correcto y que apunte a un directorio
     if(strcmp(name, dir_entry->name) == 0 && dir_entry->valid != 0) {
-      // printf("lo encontre!\n");
       free(dir_entry);
       free(dir_block);
       return i;
@@ -221,7 +220,7 @@ void print_all_entries_from_dir(unsigned int curr_block_num)
   for (int i = 0; i < 64; i++)
   {
     Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
-    printf("Entry %i: %s |Block: %i\n", i, dir_entry->name, dir_entry->block_num);
+    printf("Entry %i: %s |Block: %i |value: %i\n", i, dir_entry->name, dir_entry->block_num,dir_entry->valid);
     free(dir_entry);
   }
   free(dir_block);
