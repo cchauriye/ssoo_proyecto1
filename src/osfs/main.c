@@ -48,12 +48,19 @@ int main(int argc, char *argv[])
     //os_bitmap(1, false);
 
     // Probar os_ls
-    os_mkdir("/folder/ejemplo7");
+    
     print_all_entries_from_dir(536679);
+    os_mkdir("/folder/god/ejemplo8");
+    os_mkdir("/folder/god/ejemplo8/ejemplo9");
+    print_all_entries_from_dir(285598);
+
     //os_hardlink("/folder/god/shrek.mp4", "/folder/nuevo.mp4");
-    os_rmdir("/folder/ejemplo7", false);
-    printf("\n");
+    //print_all_entries_from_dir(285598);
+    os_rmdir("/folder/god", true);
+    // printf("\n");
     print_all_entries_from_dir(536679);
+    printf("\n");
+    //print_all_entries_from_dir(285598);
     
 
     

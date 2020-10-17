@@ -299,7 +299,27 @@ void os_rmdir(char*path, bool recursive){
             //recorro las entradas 
             //CASO 1: son archivos y los borro con os_rm
             //Armar el path para usar os_rm o usar parte de os_rm desde block_num
-            printf("Borra archivos dentro\n");
+            char entry_path[2000];
+            strcpy(entry_path, path);
+            char file_name[200] = "/";
+            strcat(file_name, dir_entry->name);
+            strcat(entry_path, file_name);
+            printf("EL PATH HACIA EL ARCHIVO ES: %s\n", entry_path);
+
+            //si es archivo, eliminamos
+            if (dir_entry->valid == 1)
+            {
+                printf("Borré archivo %s\n",  dir_entry->name);
+                os_rm(entry_path);
+            }
+            else if (dir_entry->valid == 2) //aplicamos la funciòn recursivamente
+            {
+                printf("eliminando directorio %s\n", dir_entry->name);
+                os_rmdir(entry_path, true);
+            }
+            
+            
+            
             
             //CASO 2: son directorios uso la funcion recursivamente  
             }
@@ -317,6 +337,7 @@ void os_rmdir(char*path, bool recursive){
     //Si llego aca o estaba vacia o ya se borro todo lo de dentro
     //Para borrar directorio:
     //1- Libero el bitmap
+
     modify_bitmap(block_num,0);
     printf("Modifica el bitmap\n");
     //2- Libero la entrada del directorio padre los 2 bit= 00 ¿Es necesario puntero a 0 y nombre a 0? 
