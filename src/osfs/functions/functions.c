@@ -197,17 +197,34 @@ void create_dir_entry(unsigned long int parent_block, unsigned int empty_block, 
     unsigned long int new_block_pointer = empty_block; 
     unsigned long int result = value | new_block_pointer;
     unsigned char buffer1[3];
-    printf("New block: %li\n", result);
+    // printf(": %li\n", result);
     buffer1[0] = (result & 0b00000000111111110000000000000000) >> 16;
     buffer1[1] = (result & 0b00000000000000001111111100000000) >> 8;
     buffer1[2] = (result & 0b00000000000000000000000011111111);
-    printf("Número de bloque: \n%i \n%i \n%i", buffer1[0], buffer1[1], buffer1[2]);
+    // printf("Número de bloque: \n%i \n%i \n%i\n", buffer1[0], buffer1[1], buffer1[2]);
     fwrite(buffer1, 1, 3, pFile);
 
     // // Escribimos nombre del archivo
     start = 2048*parent_block +  32*empty_entry + 3;
     fseek(pFile, start, SEEK_SET);
-    fwrite(name, sizeof(name), 1, pFile);
+    fwrite(name, strlen(name), 1, pFile);
+    fclose(pFile);
+    return;
+}
+
+void new_index_block(unsigned long int empty_block){
+    // Preparamos los primeros 8 Bytes: 1 para num de hardlinks, 7 para file size
+    unsigned long int start = BLOCK_SIZE * empty_block;
+    unsigned char buffer[8];
+    buffer[0] = 0b00000001;
+    for (int i = 1; i < 8; i++)
+    {
+        buffer[i] = 0b00000000;
+    }
+    FILE * pFile;
+    pFile = fopen(diskname, "r+");
+    fseek(pFile, start, SEEK_SET);
+    fwrite(buffer, 8, 1, pFile);
     fclose(pFile);
     return;
 }

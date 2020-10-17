@@ -223,7 +223,7 @@ int find_empty_entry (unsigned long int block_num)
     Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
     if (!dir_entry->valid) //significa que está vacío
      {
-      printf("La entrada %i del bloque %i está vacía\n", i, block_num);
+      // printf("La entrada %i del bloque %i está vacía\n", i, block_num);
       free(dir_entry);
       free(dir_block);
       return i;

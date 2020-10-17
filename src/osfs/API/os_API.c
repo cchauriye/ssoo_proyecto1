@@ -108,57 +108,14 @@ int os_mkdir(char* path){
 }
 
 osFile* os_open(char* path, char mode) {
-    
-    osFile* file = malloc(sizeof(osFile));
-    // Modo lectura
-    if(mode == 'r') {
-        unsigned long int index_block_num = find_block_by_path(path);
-        printf("El index esta en el block num: %lu\n", index_block_num);
 
-        // Instanciamos el Index Block
-        Index_block* index_block = index_block_init(index_block_num, 1);
-
-        file ->index_block = index_block;
-
-        // Calculamos cuantos data blocks usa
-        unsigned long int data_blocks_used = (index_block->file_size / BLOCK_SIZE);
-        if(index_block->file_size % BLOCK_SIZE) {
-            data_blocks_used += 1;
-        }
-        file->data_blocks_used = data_blocks_used;
-
-        // Claculamos cuantos Bloques de direccionamiento simple usa
-        unsigned long int bytes_used_for_pointers_to_data = (data_blocks_used * 4);
-        unsigned long int indirect_blocks_used = (bytes_used_for_pointers_to_data / BLOCK_SIZE);
-        if(bytes_used_for_pointers_to_data % BLOCK_SIZE) {
-            indirect_blocks_used += 1;
-        }
-        file->indirect_blocks_used = indirect_blocks_used;
-
-        // Calculamos cuantos bloques indice usa
-        unsigned long int index_blocks_used;
-        unsigned long int bytes_used_for_pointers_to_indirect = (indirect_blocks_used * 4);
-        if (bytes_used_for_pointers_to_indirect <= 2036){
-            index_blocks_used = 1;
-        }
-        else{
-            index_blocks_used = 1;
-            bytes_used_for_pointers_to_indirect -= 2036;
-            index_blocks_used += bytes_used_for_pointers_to_indirect / 2044;
-            if(bytes_used_for_pointers_to_indirect % 2044) {
-                index_blocks_used += 1;
-            }
-        }
-        file->index_blocks_used = index_blocks_used;
-    }
-
-    // Modo escritura
+    // Modo escritura --> creamos un archivo 
     if(mode == 'w') {
         unsigned long int index_block_num = find_block_by_path(path);
         
         // Revisamos que no existia el archivo
         if(index_block_num == -1){
-            // Buscamos un bloque vacio en el bitmap y lo marcamos como ocupado
+            // Buscamos un bloque vacio en el bitmap
             unsigned long int empty_block = find_empty_block();
 
             // Buscamos el bloque dir donde va a ir este archivo
@@ -166,26 +123,65 @@ osFile* os_open(char* path, char mode) {
             // Buscamos un empty dir entry en el directorio
             int empty_entry = find_empty_entry(parent_dir_block);
             // Sacamos el nombre del archivo
-            char *slash = path;
-            char* dir_name;
-            char* file_name;
-            char* leftover;
-            while(strpbrk(slash+1, "\\/")){
-                slash = strpbrk(slash+1, "\\/");
-                dir_name = strndup(path, slash - path);
-                leftover = strdup(slash+1);
-                path = leftover;
-                slash = leftover;
-            };
-            file_name = slash;
-            printf("file name: %s\n", file_name);
-            // Setiamos el bloque indice
+            char path2[100];
+            strcpy(path2, path);
+            // Extract the first token
+            char* next_dir = strtok(path2, "/");
+            char* prev_dir;
+            // loop through the string to extract all other tokens
+            while( next_dir != NULL) {
+                prev_dir = next_dir;
+                next_dir = strtok(NULL, "/");
+            }
+            char* file_name = prev_dir;
+            // Setiamos el dir block entry
             create_dir_entry(parent_dir_block, empty_block, empty_entry, file_name, 1);
 
-
+            // Setiamos el index block
+            new_index_block(empty_block);
         }
-
     }
+
+    // Ahora instanciamos el archivo que existia o que acabamos de crear
+    osFile* file = malloc(sizeof(osFile));
+
+    unsigned long int index_block_num = find_block_by_path(path);
+
+    // Instanciamos el Index Block
+    Index_block* index_block = index_block_init(index_block_num, 1);
+
+    file ->index_block = index_block;
+
+    // Calculamos cuantos data blocks usa
+    unsigned long int data_blocks_used = (index_block->file_size / BLOCK_SIZE);
+    if(index_block->file_size % BLOCK_SIZE) {
+        data_blocks_used += 1;
+    }
+    file->data_blocks_used = data_blocks_used;
+
+    // Claculamos cuantos Bloques de direccionamiento simple usa
+    unsigned long int bytes_used_for_pointers_to_data = (data_blocks_used * 4);
+    unsigned long int indirect_blocks_used = (bytes_used_for_pointers_to_data / BLOCK_SIZE);
+    if(bytes_used_for_pointers_to_data % BLOCK_SIZE) {
+        indirect_blocks_used += 1;
+    }
+    file->indirect_blocks_used = indirect_blocks_used;
+
+    // Calculamos cuantos bloques indice usa
+    unsigned long int index_blocks_used;
+    unsigned long int bytes_used_for_pointers_to_indirect = (indirect_blocks_used * 4);
+    if (bytes_used_for_pointers_to_indirect <= 2036){
+        index_blocks_used = 1;
+    }
+    else{
+        index_blocks_used = 1;
+        bytes_used_for_pointers_to_indirect -= 2036;
+        index_blocks_used += bytes_used_for_pointers_to_indirect / 2044;
+        if(bytes_used_for_pointers_to_indirect % 2044) {
+            index_blocks_used += 1;
+        }
+    }
+    file->index_blocks_used = index_blocks_used;
     return file;
 }
 
@@ -207,7 +203,7 @@ int os_rm(char* path){
         next_dir = strtok(NULL, "/");
     }
     char* file_name = prev_dir;
-    
+
     // Restamos 1 a los Hard Links
     unsigned long int index_block_num = find_block_by_path(path);
     unsigned long int start = BLOCK_SIZE*index_block_num;

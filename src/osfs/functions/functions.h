@@ -9,3 +9,4 @@ void print_hex_buffer(unsigned char* hex_buffer, unsigned char* buffer, long int
 void print_binary_buffer(unsigned char* buffer, long int buff_size);
 unsigned long int find_empty_block();
 long unsigned int find_parent_block_by_path(char* path);
+void new_index_block(unsigned long int empty_block);
