@@ -27,3 +27,5 @@ void os_ls(char* path);
 char* dir_name_from_path(char* path);
 long unsigned int find_block_by_path(char* path);
 int os_rm(char* path);
+int os_mkdir(char* path);
+void os_hardlink(char*orig, char*dest);

@@ -13,6 +13,21 @@
 extern char* diskname;
 extern unsigned int BLOCK_SIZE;
 
+unsigned char* find_name_by_path(char* path){
+    char path2[100];
+    strcpy(path2, path);
+    // Extract the first token
+    char* next_dir = strtok(path2, "/");
+    char* prev_dir;
+    // loop through the string to extract all other tokens
+    while( next_dir != NULL) {
+        prev_dir = next_dir;
+        next_dir = strtok(NULL, "/");
+    }
+    char* file_name = prev_dir;
+return file_name;
+}
+
 void modify_bitmap(unsigned long int block_num, int value){
     // Vamos a leer el Byte que queremos modificar
     int buff_size = 1;
@@ -225,6 +240,37 @@ void new_index_block(unsigned long int empty_block){
     pFile = fopen(diskname, "r+");
     fseek(pFile, start, SEEK_SET);
     fwrite(buffer, 8, 1, pFile);
+    fclose(pFile);
+    return;
+}
+
+//escribir el nombre y puntero en la entrada del padre
+void write_entry_block(unsigned long int parent_block, unsigned int index_block, int empty_entry, unsigned char* name, int type){
+    FILE * pFile;
+    pFile = fopen(diskname, "r+");
+    printf("nombre dentro: %s  , ", name);
+    // Editar directorio padre. El start es en la entrada.
+    // // Escribimos que es de tipo 1:
+    printf("Parent block en start: %i\n", parent_block);
+    printf("Empty entry en start: %i\n", empty_entry);
+    unsigned long int start = 2048*parent_block +  32*empty_entry;
+    fseek(pFile, start, SEEK_SET);
+    long int value = pow((double)2, (double)(21 + type)); // 1 en la posición que queremos
+    unsigned long int new_block_pointer = index_block; 
+    unsigned long int result = value | new_block_pointer;
+    unsigned char buffer1[3];
+    // printf(": %li\n", result);
+    buffer1[0] = (result & 0b00000000111111110000000000000000) >> 16;
+    buffer1[1] = (result & 0b00000000000000001111111100000000) >> 8;
+    buffer1[2] = (result & 0b00000000000000000000000011111111);
+    // printf("Número de bloque: \n%i \n%i \n%i\n", buffer1[0], buffer1[1], buffer1[2]);
+    fwrite(buffer1, 1, 3, pFile);
+
+    // // Escribimos nombre del archivo
+    start = 2048*parent_block +  32*empty_entry + 3;
+    fseek(pFile, start, SEEK_SET);
+    printf("nombre: %s  , start: %i", name, start);
+    fwrite(name, strlen(name), 1, pFile);
     fclose(pFile);
     return;
 }

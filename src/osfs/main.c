@@ -41,14 +41,18 @@ int main(int argc, char *argv[])
 
     // Probar os_open
     os_bitmap(1, false);
-    osFile* f = os_open("/folder/god/mora13.txt", 'w');
-    printf("index block \n hardlinks: %i \n position: %u\n file size: %llu\n", f->index_block->num_hardlinks, f->index_block->position, f->index_block->file_size);
-    printf("f: \nindex blocks used: %lu\n indirect blocks used: %lu\n data blocks used: %lu\n", f->index_blocks_used, f->indirect_blocks_used, f->data_blocks_used);
-    int closed = os_close(f);
-    os_bitmap(1, false);
+    // osFile* f = os_open("/folder/god/mora13.txt", 'w');
+    // printf("index block \n hardlinks: %i \n position: %u\n file size: %llu\n", f->index_block->num_hardlinks, f->index_block->position, f->index_block->file_size);
+    // printf("f: \nindex blocks used: %lu\n indirect blocks used: %lu\n data blocks used: %lu\n", f->index_blocks_used, f->indirect_blocks_used, f->data_blocks_used);
+    // int closed = os_close(f);
+    //os_bitmap(1, false);
 
     // Probar os_ls
     os_ls("/folder/god");
+    print_all_entries_from_dir(536679);
+    os_hardlink("/folder/god/shrek.mp4", "/folder/nuevo.mp4");
+    //os_mkdir("/folder/nuebo");
+    print_all_entries_from_dir(536679);
     
 
     

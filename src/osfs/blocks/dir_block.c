@@ -215,6 +215,19 @@ void print_files_from_dir(unsigned int dir_block_num)
   return;
 }
 
+void print_all_entries_from_dir(unsigned int curr_block_num)
+{
+  Dir_block*  dir_block = dir_block_init(curr_block_num);
+  for (int i = 0; i < 64; i++)
+  {
+    Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
+    printf("Entry %i: %s |Block: %i\n", i, dir_entry->name, dir_entry->block_num);
+    free(dir_entry);
+  }
+  free(dir_block);
+  return;
+}
+
 int find_empty_entry (unsigned long int block_num)
 {
   Dir_block*  dir_block = dir_block_init(block_num);

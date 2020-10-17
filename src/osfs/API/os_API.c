@@ -237,3 +237,44 @@ int os_rm(char* path){
 
     return 0;
 }
+
+
+/*int os_hardlink(char*orig, char*dest). Funcion que se encarga de crear un hardlink del archivo 
+ referenciado  por origen  una  nueva  ruta dest,  aumentando  la  cantidad  de  referencias  
+ al  archivo original.
+*/
+void os_hardlink(char*orig, char*dest){
+
+    //1. Encontrar la entrada vacía del bloque padre del destino
+    long unsigned int parent_block = find_parent_block_by_path(dest);
+    int empty_entry = find_empty_entry(parent_block);
+    unsigned char* dest_name = find_name_by_path(dest);
+    printf("Name: %s\n", dest_name);
+
+    //2. Encontrar el bloque ìndice del archivo origen
+    unsigned int index_block_orig = find_block_by_path(orig);
+
+    //3. Escribir en esa entrada que es un archivo y ponerle un puntero 
+    // al bloque indice del origen y el nombre del archivo.
+    int type = 1;
+    write_entry_block(parent_block, index_block_orig, empty_entry, dest_name, type);
+
+    //4. Escribir en el bloque ìndice de origen el hardlink al bloque destino.
+
+    unsigned long int start = 2048*index_block_orig;
+    int buff_size = 1;
+    unsigned char buffer[buff_size];
+    read_from_position(start, buffer, buff_size);
+
+    int previous =  buffer[0];
+    buffer[0] = buffer[0] + 1;
+
+    FILE * pFile;
+    pFile = fopen(diskname, "r+");
+    fseek(pFile, start, SEEK_SET);
+    fwrite(buffer, 1, 1, pFile);
+    fclose(pFile);
+
+    printf("bloque_padre: %i \n", parent_block);
+    return;
+}
