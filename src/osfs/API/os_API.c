@@ -7,145 +7,371 @@
 #include <unistd.h> 
 #include <stdlib.h>
 #include "os_API.h"
+#include "../functions/functions.h"
 
 char* diskname;
 unsigned int BLOCK_SIZE = 2048;
-
-// Lee el .bin desde una posición dada
-void read_from_position(long int start, unsigned char* buffer, long int buff_size)
-{
-    FILE* ptr = fopen(diskname, "rb");
-    if (!ptr)
-    {
-        printf("Unable to open file!");
-    }
-    fseek(ptr, start, SEEK_SET);
-    fread(buffer, sizeof(unsigned char), buff_size, ptr);
-    fclose(ptr);
-};
-
-// Imprimir buffer en binario
-void print_binary_buffer(unsigned char* buffer, long int buff_size)
-{
-    // for (int i = 0; i < buff_size; i++) {
-    //     printf("%i", buffer[i]);
-    // }
-    // printf("\n");
-    for(int i = 0; i < buff_size; i++) {
-        int z = 128, oct = buffer[i];
-        while (z > 0)
-        {
-            if (oct & z)
-                fprintf(stderr, "1");
-            else
-                fprintf(stderr, "0");
-            z >>= 1;
-        }
-        fprintf(stderr, "\n");
-    }
-}
-
-// Imprimir buffer en hexadecimal
-void print_hex_buffer(unsigned char* hex_buffer, unsigned char* buffer, long int buff_size)
-{ 
-    for (int i = 0; i < buff_size; i++) {
-        int dec_num = buffer[i];
-        int j = 2*i;
-        if (dec_num == 0) 
-        {
-            hex_buffer[j] = 48;
-            hex_buffer[j+1] = 48;
-        }
-        while(dec_num != 0) 
-        {    
-            // temporary variable to store remainder 
-            int temp  = 0; 
-            
-            // storing remainder in temp variable. 
-            temp = dec_num % 16; 
-            
-            // check if temp < 10 
-            if(temp < 10) 
-            { 
-                hex_buffer[j] = temp + 48;
-            } 
-            else
-            { 
-                hex_buffer[j] = temp + 55;
-            } 
-            j++; 
-            dec_num = dec_num/16; 
-        } 
-    }
-}
 
 // Establece como variable global la ruta local del disco
 void os_mount(char* disk){
     diskname = disk;
 }
 
-// Crear archivo binario de prueba
-void create_test_bin(){
-    FILE *fp;
-    unsigned char mibyte[8] = "10101010";
-    fp = fopen( "test.bin" , "wb" );
-    fwrite(mibyte, sizeof(mibyte), 1 , fp);
-    fclose(fp);
-}
-
 // Imprimir bitmap  AL FINAL ARREGLAR A LA CANTIDAD DE BYTES CORRECTA
 void os_bitmap(unsigned num, bool hex){
-    long int buff_size = 20;
+    long int buff_size = 15;
     unsigned char buffer[buff_size];
-    read_from_position(BLOCK_SIZE*num, buffer, buff_size);
-    if(hex){
-        unsigned char hex_buffer[buff_size * 2];
-        print_hex_buffer(hex_buffer, buffer, buff_size);
-        for (int i=0; i<buff_size*2; i++){
-            printf("%c", hex_buffer[i]);
+    if (num == 0){
+        for (int b = 1; b < 65; b++)
+        {
+            read_from_position(BLOCK_SIZE*b, buffer, buff_size);
+            if(hex){
+                unsigned char hex_buffer[buff_size * 2];
+                print_hex_buffer(hex_buffer, buffer, buff_size);
+                for (int i=0; i<buff_size*2; i++){
+                    printf("%c", hex_buffer[i]);
+                }
+                printf("\n");
+            }
+            else {
+                print_binary_buffer(buffer, buff_size);
+            }
         }
-        printf("\n");
+        
     }
     else {
-        print_binary_buffer(buffer, buff_size);
+        read_from_position(BLOCK_SIZE*num, buffer, buff_size);
+        if(hex){
+            unsigned char hex_buffer[buff_size * 2];
+            print_hex_buffer(hex_buffer, buffer, buff_size);
+            for (int i=0; i<buff_size*2; i++){
+                printf("%c", hex_buffer[i]);
+            }
+            printf("\n");
+        }
+        else {
+            print_binary_buffer(buffer, buff_size);
+        }
     }
 }
 
 // Verificar si archivo existe.
 int os_exists(char* path){
-    struct stat s;
-    int err = stat(path, &s);
-    if(-1 == err)
+    if (find_block_by_path(path) == -1)
     {
-        printf("File does not exist.\n");
         return 0;
     }
     return 1;
 }
 
-// Imprimir nombres de archivos en el path dado haciendo split del path
 void os_ls(char* path){
+    long unsigned int dir_block_num = find_block_by_path(path);
+    if (dir_block_num == -1){
+        return;
+    }
+    else{
+        print_files_from_dir(dir_block_num);
+    }
+}
+
+//crear un direcotrio con el path dado
+int os_mkdir(char* path){  
+    // Buscamos un bloque vacio en el bitmap
+    unsigned long int empty_block = find_empty_block();
+    // Buscamos el bloque directorio donde tenemos que crear la entrada
+    unsigned long int parent_block_num = find_parent_block_by_path(path);
+    if (parent_block_num == -1) {
+        return 1;
+    }
+
     char *slash = path;
     char* dir_name;
+    char* file_name;
     char* leftover;
-    int block_num = 0;
-    int counter = 1;
     while(strpbrk(slash+1, "\\/")){
         slash = strpbrk(slash+1, "\\/");
         dir_name = strndup(path, slash - path);
         leftover = strdup(slash+1);
-        printf("Dir %i: %s\n", counter, dir_name);
+        printf("leftover: %s\n", leftover);
         path = leftover;
         slash = leftover;
-        block_num = find_dir_entry_by_name(block_num, dir_name);
-        if(block_num == 0){
-            return;
-        }
-        counter++;
     };
     dir_name = slash;
-    block_num = find_dir_entry_by_name(block_num, dir_name);
-    printf("Dir %i: %s\n", counter, dir_name);
-    print_files_from_dir(block_num, dir_name);
-    return;
+    printf("dir name: %s\n", dir_name);
+
+    // Buscamos una entrada vacia
+    int empty_entry = find_empty_entry(parent_block_num);
+
+    // Creamos el directorio
+    create_dir_entry(parent_block_num, empty_block, empty_entry, dir_name, 2);
+    return 0;
+}
+
+osFile* os_open(char* path, char mode) {
+
+    // Modo escritura --> creamos un archivo 
+    if(mode == 'w') {
+        unsigned long int index_block_num = find_block_by_path(path);
+        
+        // Revisamos que no existia el archivo
+        if(index_block_num == -1){
+            // Buscamos un bloque vacio en el bitmap
+            unsigned long int empty_block = find_empty_block();
+
+            // Buscamos el bloque dir donde va a ir este archivo
+            unsigned long int parent_dir_block = find_parent_block_by_path(path);
+            // Buscamos un empty dir entry en el directorio
+            int empty_entry = find_empty_entry(parent_dir_block);
+            // Sacamos el nombre del archivo
+            char path2[100];
+            strcpy(path2, path);
+            // Extract the first token
+            char* next_dir = strtok(path2, "/");
+            char* prev_dir;
+            // loop through the string to extract all other tokens
+            while( next_dir != NULL) {
+                prev_dir = next_dir;
+                next_dir = strtok(NULL, "/");
+            }
+            char* file_name = prev_dir;
+            // Setiamos el dir block entry
+            create_dir_entry(parent_dir_block, empty_block, empty_entry, file_name, 1);
+
+            // Setiamos el index block
+            new_index_block(empty_block);
+        }
+    }
+
+    // Ahora instanciamos el archivo que existia o que acabamos de crear
+    osFile* file = malloc(sizeof(osFile));
+    file->bytes_read = 0;
+    file->index_blocks_read = 0;
+    file->dis_blocks_read = 0;
+    file->data_blocks_read = 0;
+    file->index_block_offset = 0;
+    file->dis_block_offset = 0;
+    file->data_block_offset = 0;
+
+    unsigned long int index_block_num = find_block_by_path(path);
+    file->index_block_num = index_block_num;
+
+    // Instanciamos el Index Block
+    Index_block* index_block = index_block_init(index_block_num, 1);
+
+    file ->index_block = index_block;
+
+    // Calculamos cuantos data blocks usa
+    unsigned long int data_blocks_used = (index_block->file_size / BLOCK_SIZE);
+    if(index_block->file_size % BLOCK_SIZE) {
+        data_blocks_used += 1;
+    }
+    file->data_blocks_used = data_blocks_used;
+
+    // Claculamos cuantos Bloques de direccionamiento simple usa
+    unsigned long int bytes_used_for_pointers_to_data = (data_blocks_used * 4);
+    unsigned long int indirect_blocks_used = (bytes_used_for_pointers_to_data / BLOCK_SIZE);
+    if(bytes_used_for_pointers_to_data % BLOCK_SIZE) {
+        indirect_blocks_used += 1;
+    }
+    file->indirect_blocks_used = indirect_blocks_used;
+
+    // Calculamos cuantos bloques indice usa
+    unsigned long int index_blocks_used;
+    unsigned long int bytes_used_for_pointers_to_indirect = (indirect_blocks_used * 4);
+    if (bytes_used_for_pointers_to_indirect <= 2036){
+        index_blocks_used = 1;
+    }
+    else{
+        index_blocks_used = 1;
+        bytes_used_for_pointers_to_indirect -= 2036;
+        index_blocks_used += bytes_used_for_pointers_to_indirect / 2044;
+        if(bytes_used_for_pointers_to_indirect % 2044) {
+            index_blocks_used += 1;
+        }
+    }
+    file->index_blocks_used = index_blocks_used;
+    return file;
+}
+
+int os_close(osFile* file_desc){
+    free(file_desc->index_block);
+    free(file_desc);
+    return 0;
+}
+
+int os_rm(char* path){
+    char path2[100];
+    strcpy(path2, path);
+    // Extract the first token
+    char* next_dir = strtok(path2, "/");
+    char* prev_dir;
+    // loop through the string to extract all other tokens
+    while( next_dir != NULL) {
+        prev_dir = next_dir;
+        next_dir = strtok(NULL, "/");
+    }
+    char* file_name = prev_dir;
+
+    // Restamos 1 a los Hard Links
+    unsigned long int index_block_num = find_block_by_path(path);
+    unsigned long int start = BLOCK_SIZE*index_block_num;
+    unsigned char buffer[1];
+    read_from_position(start, buffer, 1);
+    int num_of_hl = buffer[0];
+    num_of_hl --;
+    buffer[0] = num_of_hl;
+    FILE * pFile;
+    pFile = fopen(diskname, "r+");
+    fseek(pFile, start, SEEK_SET);
+    fwrite(buffer, 1, 1, pFile);
+    fclose(pFile);
+
+    // Vamos a modificar valid en dir entry
+    unsigned long int parent_block = find_parent_block_by_path(path);
+    int entry_block_num = find_entry_num_by_name(parent_block, file_name);
+    
+    start = BLOCK_SIZE*parent_block + entry_block_num*32;
+    read_from_position(start, buffer, 1);
+    print_binary_buffer(buffer, 1);
+    buffer[0] = buffer[0] & 0b00111111;
+    print_binary_buffer(buffer, 1);
+    pFile = fopen(diskname, "r+");
+    fseek(pFile, start, SEEK_SET);
+    fwrite(buffer, 1, 1, pFile);
+    fclose(pFile);
+
+     // Dejamos el bitmap del bloque indice en 0
+    modify_bitmap(entry_block_num, 0);
+
+    return 0;
+}
+
+int os_read(osFile* file_desc, void* buffer, int nbytes){
+
+    // Revisar si nbytes es mayor que file_size - bytes_read
+    if (nbytes > ((file_desc->index_block->file_size) - file_desc->bytes_read))
+    {
+        nbytes = (file_desc->index_block->file_size) - file_desc->bytes_read;
+    }
+
+    // ------- Esta parte potencialmente se puede ahorrar si vamos actualizando los parametros de file_desc
+    // // Tenemos que calcular desde donde comenzar leyendo
+    // // En que bloque de datos quedo la ultima lectura
+    // unsigned long int data_blocks_fully_read = file_desc->bytes_read / BLOCK_SIZE;
+    // unsigned long int offset_in_last_data_block = file_desc->bytes_read % BLOCK_SIZE;
+
+    // // Cuantos bloques DIS fueron leidos
+    // unsigned long int dis_blocks_fully_read = data_blocks_fully_read*4 / BLOCK_SIZE;
+    // unsigned long int offset_in_last_dis_block = (data_blocks_fully_read*4) % BLOCK_SIZE; // Numero del ultimo ptr a un bloque de datos que fue leido completo (si numeramos los ptrs en dis de 0 a 2048/4)
+
+    // // Cuantos bloques indice fueron leidos
+    // unsigned long int index_blocks_fully_read;
+    // unsigned long int offset_in_last_index_block;
+    // if (dis_blocks_fully_read*4 < 2036){
+    //     index_blocks_fully_read = 0;
+    //     offset_in_last_index_block = data_blocks_fully_read*4;
+    // }
+    // else{
+    //     unsigned long int dis_blocks_read_in_first_index = 2036/4;
+    //     index_blocks_fully_read = 1 + (dis_blocks_fully_read - dis_blocks_read_in_first_index)*4/2044;
+    //     offset_in_last_index_block = (data_blocks_fully_read - dis_blocks_read_in_first_index)*4 % 2044;
+    // }
+    // --------------- Hasta aca ------------------
+
+    // Funciones por hacer:
+
+    // Procedimiento:
+    // Siempre mantener index_block_read, dis_blocks_read, data_blocks_read
+    // - Recorrer la lista ligada de Index_blocks hasta el index block que hay que leer
+    // - Instanciar el DIS block que hay que leer
+    // - Instanciar el DB que hay que leer
+    // - Leer DB desde el offset
+    // - Si se acaba, pasar al siguiente DB que apunte el DIS
+    // - Si se acaba el DIS, pasar al siguiente DIS que apunte el index
+    // - Si se acaba el index, pasar al siguiente index
+
+    // Avanzamos hasta el index block correspondiente
+    unsigned long int curr_index_num = file_desc->index_block_num;
+    unsigned long int next_index_num = file_desc->index_block->next_index;
+    Index_block* curr_index_block;
+    if (file_desc->index_blocks_read == 0)
+    {
+        curr_index_block = index_block_init(curr_index_num, 1);
+    }
+    else
+    {
+        for (unsigned long int i = 0; i < file_desc->index_blocks_read; i++)
+        {
+            Index_block* next_index_block = index_block_init(next_index_num, 0);
+            curr_index_num = next_index_num;
+            next_index_num = next_index_block->next_index;
+            free(next_index_block);
+        }
+        curr_index_block = index_block_init(curr_index_num, 0);
+    }
+    // Ya tenemos curr_index_block: bloque indice donde tenemos que leer
+
+    // Instanciamos el DIS block que hay que leer
+    Dis_block* curr_dis_block = dis_block_init(curr_index_block->pointers[file_desc->index_block_offset]);
+
+    // Instanciamos el DB que hay que leer
+    Data_block* curr_data_block = data_block_init(curr_dis_block->pointers[file_desc->dis_block_offset]);
+    
+    // read_data_block(): lee desde el offset del data block
+    // Si lo que le queda del bloque por leer es menor a nbytes--> lee lo que queda. Retorna cuanto leyo.
+    // Si lo que le queda del bloque por leer es mayor a nbytes --> lee los nbytes. Retorna 0.
+
+    // Tomamos el numero retornado por read_data_block()
+    // Si es mayor a 0 --> encontrar siguiente DB next_db()
+    // next_db(file_desc, curr_dis, curr_index, dis_block_offset): retorna block num del siguiente DB
+    // Si quedan ptrs por leer en el DIS block --> retornar block num del siguiente ptr
+    // Si no quedan ptrs por leer en el DIS block --> encontrar el siguiente DIS block next_dis()
+
+    // next_dis(file_desc, curr_index, index_block_offset)
+    // Si quedan ptrs por leer en el index block --> retornar el block num del siguiente DIS
+    // Si no quedan ptrs por leer en el index block --> retornar el block num del primer DIS en el siguiente Index
+
+    int not_read_bytes = nbytes;
+    int read_bytes;
+    int total_read_bytes = 0;
+    unsigned char small_buffer[2048];
+    unsigned char buffer2[nbytes];
+    while(not_read_bytes)
+    {
+        read_bytes = read_data_block(file_desc, curr_data_block, small_buffer, not_read_bytes, nbytes);
+        not_read_bytes -= read_bytes;
+
+        int buffer_offset = total_read_bytes;
+        // Traspasar small buffer al buffer
+        for (int i = 0; i <read_bytes; i++)
+        {
+            // memcpy(buffer2, small_buffer, read_bytes);
+            buffer2[buffer_offset + i] = small_buffer[i];
+        }
+        total_read_bytes += read_bytes;
+        // strcpy(buffer2, small_buffer);
+        // buffer = &small_buffer;
+
+        
+        if(not_read_bytes)
+        {
+            unsigned long int next_db_num = next_db(file_desc, curr_index_block, curr_dis_block, curr_data_block);
+            Data_block* new_data_block = data_block_init(next_db_num);
+            memcpy(curr_data_block, new_data_block, sizeof(new_data_block));
+            free(new_data_block);
+        }   
+    }    
+    
+    free(curr_data_block);
+    free(curr_dis_block);
+    free(curr_index_block);
+
+    // for (int i = 0; i < total_read_bytes; i++)
+    // {
+    //     printf("%c", buffer2[i]);
+    // }
+    
+    memcpy(buffer, buffer2, total_read_bytes);
+    // strcpy(buffer, buffer2);
+    return total_read_bytes;
 }
