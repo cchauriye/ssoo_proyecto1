@@ -13,19 +13,22 @@
 extern char* diskname;
 extern unsigned int BLOCK_SIZE;
 
-unsigned char* find_name_by_path(char* path){
-    char path2[100];
-    strcpy(path2, path);
-    // Extract the first token
-    char* next_dir = strtok(path2, "/");
-    char* prev_dir;
-    // loop through the string to extract all other tokens
-    while( next_dir != NULL) {
-        prev_dir = next_dir;
-        next_dir = strtok(NULL, "/");
-    }
-    char* file_name = prev_dir;
-return file_name;
+char* find_name_by_path(char* path){
+    char *slash = path;
+    char* dir_name;
+    char* file_name;
+    char* leftover;
+    while(strpbrk(slash+1, "\\/")){
+        slash = strpbrk(slash+1, "\\/");
+        dir_name = strndup(path, slash - path);
+        leftover = strdup(slash+1);
+        printf("leftover: %s\n", leftover);
+        path = leftover;
+        slash = leftover;
+    };
+    printf("Dir name \n");
+    dir_name = slash;
+    return dir_name;
 }
 
 void modify_bitmap(unsigned long int block_num, int value){

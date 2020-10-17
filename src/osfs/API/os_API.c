@@ -278,3 +278,56 @@ void os_hardlink(char*orig, char*dest){
     printf("bloque_padre: %i \n", parent_block);
     return;
 }
+
+void os_rmdir(char*path, bool recursive){
+    unsigned long int block_num = find_block_by_path(path);
+    //Reviso si hay alguna entrada ocupada, si no hay borro el dir altiro, si hay reviso recursive
+    Dir_block*  dir_block = dir_block_init(block_num);
+    for (int i = 0; i < 64; i++)
+    {
+        Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
+        if (dir_entry->valid) //significa que está ocupado
+        {
+            if (recursive){
+            //recorro las entradas 
+            //CASO 1: son archivos y los borro con os_rm
+            //Armar el path para usar os_rm o usar parte de os_rm desde block_num
+            printf("Borra archivos dentro\n");
+            
+            //CASO 2: son directorios uso la funcion recursivamente  
+            }
+            else{
+                printf("No ejecuta funcion porque hay archivos y es no recursivo\n");
+                return;
+            }
+        // printf("La entrada %i del bloque %i está vacía\n", i, block_num);
+        free(dir_entry);
+        free(dir_block);
+        } 
+        free(dir_entry);
+    }
+    free(dir_block);
+    //Si llego aca o estaba vacia o ya se borro todo lo de dentro
+    //Para borrar directorio:
+    //1- Libero el bitmap
+    modify_bitmap(block_num,0);
+    printf("Modifica el bitmap\n");
+    //2- Libero la entrada del directorio padre los 2 bit= 00 ¿Es necesario puntero a 0 y nombre a 0? 
+    unsigned long int parent_block = find_parent_block_by_path(path);
+    printf("AAA");
+    unsigned char* name = find_name_by_path(path); //ACA SE CAE,la funcion funciona solo con cosas con extencion tipo ejemplo.txt Hay que arreglara!!
+    printf("AAA");
+    unsigned long int entry = find_entry_num_by_name(parent_block,name); 
+    
+    unsigned long int start = 2048*parent_block +  32*entry;
+    unsigned int value = 0;
+    FILE * pFile;
+    pFile = fopen(diskname, "r+");
+    fseek(pFile, start, SEEK_SET);
+    fwrite(value,1, 1, pFile);
+    fclose(pFile); 
+
+
+    
+    
+}
