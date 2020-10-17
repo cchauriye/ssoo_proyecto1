@@ -8,7 +8,6 @@
 
 extern char* diskname;
 
-/** Inicializa una lista vacía */
 Dir_block* dir_block_init(unsigned int block_num)
 {
   Dir_block* dir_block = malloc(sizeof(Dir_block));
@@ -140,6 +139,7 @@ Index_block* index_block_init(unsigned int block_number, int first){
 Data_block* data_block_init(unsigned int block_number){
   Data_block* data_block = malloc(sizeof(Data_block));
 
+  data_block->block_num = block_number;
   unsigned int buff_size = 2048;
   unsigned char buffer[buff_size];
   read_from_position(2048*block_number, buffer, buff_size);
@@ -149,6 +149,24 @@ Data_block* data_block_init(unsigned int block_number){
       data_block -> data[i] = buffer[i];
   }
   return data_block;
+}
+
+Dis_block* dis_block_init(unsigned int block_number){
+  Dis_block* dis_block = malloc(sizeof(Dis_block));
+
+  int buff_size = 2048;
+  unsigned char buffer[buff_size];
+  read_from_position(2048*block_number, buffer, buff_size);
+  unsigned long int pointer;
+  for(int i=0; i<(2048/4); i++){
+        pointer = 0;
+        pointer = (pointer + buffer[4*i + 0]) << 8;
+        pointer = (pointer + buffer[4*i + 1]) << 8;
+        pointer = (pointer + buffer[4*i + 2]) << 8;
+        pointer = (pointer + buffer[4*i + 3]);
+        dis_block -> pointers[i] = pointer;
+      }
+  return dis_block;
 }
 
 unsigned long int find_block_by_name(unsigned int curr_block_num, char* name)

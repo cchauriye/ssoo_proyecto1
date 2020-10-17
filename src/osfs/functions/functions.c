@@ -228,3 +228,89 @@ void new_index_block(unsigned long int empty_block){
     fclose(pFile);
     return;
 }
+
+int read_data_block(osFile* file_desc, Data_block* curr_data_block, unsigned char* small_buffer, int not_read_bytes, int nbytes){
+    
+    int offset = file_desc->data_block_offset;
+    int bytes_to_read;
+
+    // Los not read bytes si caben en este DB
+    if (BLOCK_SIZE - offset > not_read_bytes)
+    {
+        bytes_to_read = not_read_bytes;
+        long unsigned int start = BLOCK_SIZE*curr_data_block->block_num + offset;
+        FILE * pFile;
+        pFile = fopen(diskname, "r");
+        fseek(pFile, start, SEEK_SET);
+        fread(small_buffer, bytes_to_read, 1, pFile);
+        fclose(pFile);
+        file_desc->data_block_offset += not_read_bytes;
+    }
+    else
+    {
+        bytes_to_read = BLOCK_SIZE - offset;
+        // Los not read bytes no caben en este DB
+        // Leemos lo que queda de este DB
+        long unsigned int start = BLOCK_SIZE*curr_data_block->block_num + offset;
+        FILE * pFile;
+        pFile = fopen(diskname, "r");
+        fseek(pFile, start, SEEK_SET);
+        fread(small_buffer, bytes_to_read, 1, pFile);
+        fclose(pFile);
+
+        file_desc->data_block_offset = 0;
+        file_desc->data_blocks_read ++;
+        file_desc->dis_block_offset ++;
+    }
+    return bytes_to_read;
+} 
+
+unsigned long int next_db(osFile* file_desc, Index_block* curr_index_block, Dis_block* curr_dis_block, Data_block* curr_data_block){
+
+    // next_db(file_desc, curr_dis, curr_index, dis_block_offset): retorna block num del siguiente DB
+    // Si quedan ptrs por leer en el DIS block --> retornar block num del siguiente ptr
+    // Si no quedan ptrs por leer en el DIS block --> encontrar el siguiente DIS block next_dis()
+    
+    unsigned long int return_db_block_num;
+    // Si quedan ptrs dentro del dis block, retorno el ptr al siguiente db
+    if(file_desc->dis_block_offset < BLOCK_SIZE/4)
+    {
+        return curr_dis_block->pointers[file_desc->dis_block_offset];
+    }
+    // Si no quedan ptrs dentro del dis block, debo pasar al siguiente dis block
+    else
+    {
+        file_desc->dis_blocks_read ++;
+        // Tenemos que encontrar el siguiente DIS block
+        file_desc->dis_block_offset = 0;
+        file_desc->index_block_offset ++;
+
+        // Si quedan ptrs a dis blocks en el curr index block
+        if(file_desc->index_block_offset < curr_index_block->num_pointers)
+        {
+            // Se mantiene el index, avanzamos un dis y retornamos el primer db del dis
+            Dis_block* new_dis_block = dis_block_init(curr_index_block->pointers[file_desc->index_block_offset]);
+            memcpy(curr_dis_block, new_dis_block, sizeof(new_dis_block));
+            free(new_dis_block);
+            return_db_block_num = curr_dis_block->pointers[0];
+            return return_db_block_num;
+        }
+        else
+        {
+            // Avanzamos un index, actualizamos dis y db
+            unsigned long int next_index_num = curr_index_block->next_index;
+            Index_block* next_index_block = index_block_init(next_index_num, 0);
+            memcpy(curr_index_block, next_index_block, sizeof(new_index_block));
+            free(next_index_block);
+            file_desc->index_block_offset = 0;
+            file_desc->index_blocks_read ++;
+
+            // Actualizamos el dis
+            Dis_block* new_dis_block = dis_block_init(curr_index_block->pointers[0]);
+            memcpy(curr_dis_block, new_dis_block, sizeof(new_dis_block));
+            free(new_dis_block);
+            return_db_block_num = curr_dis_block->pointers[0];
+            return return_db_block_num;
+        }
+    }
+}
