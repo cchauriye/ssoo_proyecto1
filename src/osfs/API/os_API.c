@@ -514,8 +514,7 @@ int os_read(osFile* file_desc, void* buffer, int nbytes){
     //     printf("%c", buffer2[i]);
     // }
     
-    memcpy(buffer, buffer2, total_read_bytes);
-    // strcpy(buffer, buffer2);
+    memcpy(buffer,(unsigned char *)buffer2, total_read_bytes);
     return total_read_bytes;
 }
 
@@ -564,7 +563,7 @@ int os_write(osFile* file_desc, void* buffer, int nbytes){
     int written_bytes = 0;
     int total_written_bytes = 0;
     int not_written_bytes = nbytes;
-    unsigned char buffer[nbytes];
+    // unsigned char buffer[nbytes];
 
     // Happy path:
         // Usamos write_data_block
