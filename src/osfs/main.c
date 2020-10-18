@@ -50,13 +50,20 @@ int main(int argc, char *argv[])
     // Probar os_ls
     
     print_all_entries_from_dir(536679);
+    printf("\n");
+    print_all_entries_from_dir(285598);
+    // //os_rm("/folder/god/shrek.mp4");
     os_mkdir("/folder/god/ejemplo8");
     os_mkdir("/folder/god/ejemplo8/ejemplo9");
     print_all_entries_from_dir(285598);
 
     //os_hardlink("/folder/god/shrek.mp4", "/folder/nuevo.mp4");
     //print_all_entries_from_dir(285598);
+    //os_mkdir("/folder/god/ejem8/ejemplito9");
+    printf("\n");
+    //print_all_entries_from_dir(285598);
     os_rmdir("/folder/god", true);
+    print_all_entries_from_dir(285598);
     // printf("\n");
     print_all_entries_from_dir(536679);
     printf("\n");

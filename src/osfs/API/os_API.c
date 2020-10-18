@@ -292,6 +292,7 @@ void os_rmdir(char*path, bool recursive){
     Dir_block*  dir_block = dir_block_init(block_num);
     for (int i = 0; i < 64; i++)
     {
+        printf("EStoy en el i: %i del for\n", i);
         Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
         if (dir_entry->valid) //significa que está ocupado
         {
@@ -299,6 +300,10 @@ void os_rmdir(char*path, bool recursive){
             //recorro las entradas 
             //CASO 1: son archivos y los borro con os_rm
             //Armar el path para usar os_rm o usar parte de os_rm desde block_num
+            printf("BLOQUE: %i\n", block_num);
+            printf("path que entró al manejo path: %s\n", path);
+            printf("queremos eliminar: %s\n", dir_entry->name);
+            printf("EL valid es: %i\n",  dir_entry->valid);
             char entry_path[2000];
             strcpy(entry_path, path);
             char file_name[200] = "/";
@@ -312,7 +317,8 @@ void os_rmdir(char*path, bool recursive){
                 printf("Borré archivo %s\n",  dir_entry->name);
                 os_rm(entry_path);
             }
-            else if (dir_entry->valid == 2) //aplicamos la funciòn recursivamente
+            //si es directorio, aplicamos la funciòn recursivamente
+            else if (dir_entry->valid == 2) 
             {
                 printf("eliminando directorio %s\n", dir_entry->name);
                 os_rmdir(entry_path, true);
@@ -328,8 +334,8 @@ void os_rmdir(char*path, bool recursive){
                 return;
             }
         // printf("La entrada %i del bloque %i está vacía\n", i, block_num);
-        free(dir_entry);
-        free(dir_block);
+        //free(dir_entry);
+        // free(dir_block);
         } 
         free(dir_entry);
     }
@@ -360,7 +366,7 @@ void os_rmdir(char*path, bool recursive){
     dir_name = slash;
     printf("%s\n", dir_name);
     unsigned long int  num_entry = find_entry_num_by_name(parent_block, dir_name);
-    printf("BUENARDO"); 
+    printf("BUENARDO\n"); 
     unsigned long int start = 2048*parent_block +  32*num_entry;
     int value = 0;
 
