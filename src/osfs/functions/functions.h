@@ -14,3 +14,4 @@ void new_index_block(unsigned long int empty_block);
 char* find_name_by_path(char* path);
 void write_entry_block(unsigned long int parent_block, unsigned int index_block, int empty_entry, unsigned char* name, int type);
 int read_data_block(osFile* file_desc, Data_block* curr_data_block, unsigned char* small_buffer, int not_read_bytes, int nbytes);
+int write_data_block(osFile* file_desc, Data_block* curr_data_block, void* buffer, int not_written_bytes, int nbytes, int total_written_bytes);

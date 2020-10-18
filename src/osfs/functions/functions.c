@@ -324,6 +324,54 @@ int read_data_block(osFile* file_desc, Data_block* curr_data_block, unsigned cha
     return bytes_to_read;
 } 
 
+int write_data_block(osFile* file_desc, Data_block* curr_data_block, void* buffer, int not_written_bytes, int nbytes, int total_written_bytes){
+   
+    int offset = file_desc->data_block_offset;
+    int bytes_to_write;
+
+     // Los not written bytes si caben en este DB
+    if (BLOCK_SIZE - offset > not_written_bytes)
+    {
+        bytes_to_write = not_written_bytes;
+        unsigned char local_buffer[bytes_to_write];
+        for (int i = 0; i < bytes_to_write; i++)
+        {
+            local_buffer[i] = ((unsigned char*)buffer)[i + total_written_bytes]; // Flaitismo puro
+        }
+        long unsigned int start = BLOCK_SIZE*curr_data_block->block_num + offset;
+        FILE * pFile;
+        pFile = fopen(diskname, "r+");
+        fseek(pFile, start, SEEK_SET);
+        fwrite(local_buffer, bytes_to_write, 1, pFile);
+        fclose(pFile);
+        file_desc->data_block_offset += bytes_to_write;
+    }
+    // Los not written bytes bytes no caben en este DB
+    // Escribimos todo lo que queda de este DB
+    else
+    {
+        bytes_to_write = BLOCK_SIZE - offset;
+        unsigned char local_buffer[bytes_to_write];
+
+        for (int i = 0; i < bytes_to_write; i++)
+        {
+            local_buffer[i] = ((unsigned char*)buffer)[i + total_written_bytes]; // Flaitismo puro
+        }
+
+        long unsigned int start = BLOCK_SIZE*curr_data_block->block_num + offset;
+        FILE * pFile;
+        pFile = fopen(diskname, "r+");
+        fseek(pFile, start, SEEK_SET);
+        fwrite(local_buffer, bytes_to_write, 1, pFile);
+        fclose(pFile);
+        
+        file_desc->data_block_offset = 0;
+        file_desc->data_blocks_read ++;
+        file_desc->dis_block_offset ++;
+    }
+    return bytes_to_write;
+}
+
 unsigned long int next_db(osFile* file_desc, Index_block* curr_index_block, Dis_block* curr_dis_block, Data_block* curr_data_block){
 
     // next_db(file_desc, curr_dis, curr_index, dis_block_offset): retorna block num del siguiente DB

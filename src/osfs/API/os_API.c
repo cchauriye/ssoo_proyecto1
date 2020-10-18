@@ -248,8 +248,6 @@ int os_rm(char* path){
     return 0;
 }
 
-
-
 /*int os_hardlink(char*orig, char*dest). Funcion que se encarga de crear un hardlink del archivo 
  referenciado  por origen  una  nueva  ruta dest,  aumentando  la  cantidad  de  referencias  
  al  archivo original.
@@ -498,7 +496,6 @@ int os_read(osFile* file_desc, void* buffer, int nbytes){
         // strcpy(buffer2, small_buffer);
         // buffer = &small_buffer;
 
-        
         if(not_read_bytes)
         {
             unsigned long int next_db_num = next_db(file_desc, curr_index_block, curr_dis_block, curr_data_block);
@@ -520,5 +517,82 @@ int os_read(osFile* file_desc, void* buffer, int nbytes){
     memcpy(buffer, buffer2, total_read_bytes);
     // strcpy(buffer, buffer2);
     return total_read_bytes;
+}
 
+int os_write(osFile* file_desc, void* buffer, int nbytes){
+    
+    // Avanzamos hasta el último index_block
+    unsigned long int curr_index_num = file_desc->index_block_num;
+    unsigned long int next_index_num = file_desc->index_block->next_index;
+    Index_block* curr_index_block;
+
+    if (file_desc->index_blocks_used == 1)
+    {
+        curr_index_block = index_block_init(curr_index_num, 1);
+    }
+    else
+    {
+        for (unsigned long int i = 0; i < file_desc->index_blocks_used; i++)
+        {
+            Index_block* next_index_block = index_block_init(next_index_num, 0);
+            curr_index_num = next_index_num;
+            next_index_num = next_index_block->next_index;
+            free(next_index_block);
+        }
+        curr_index_block = index_block_init(curr_index_num, 0);
+    }
+
+    // Determinamos los offsets a partir de la cantidad de bloques usados
+    unsigned long int bytes_used = file_desc -> index_block -> file_size;
+    
+    file_desc -> data_block_offset = bytes_used % 2048;
+    file_desc -> dis_block_offset = file_desc -> data_blocks_used % 512;
+    
+    if (file_desc -> index_blocks_used == 1){
+        file_desc -> index_block_offset = file_desc -> indirect_blocks_used % 509;
+    }
+    else{
+        file_desc -> index_block_offset = (file_desc -> indirect_blocks_used-509) % 511; // Verificar
+    }
+
+    // Instanciamos el último dis_block
+    Dis_block* curr_dis_block = dis_block_init(curr_index_block->pointers[file_desc->index_block_offset]);
+
+    // Instanciamos el último data_block
+    Data_block* curr_data_block = data_block_init(curr_dis_block->pointers[file_desc->dis_block_offset]);
+
+    int written_bytes = 0;
+    int total_written_bytes = 0;
+    int not_written_bytes = nbytes;
+    unsigned char buffer[nbytes];
+
+    // Happy path:
+        // Usamos write_data_block
+        // Si lo que le queda libre al bloque es menor a nbytes--> escribe lo que queda. Retorna cuanto escribió.
+        // Si lo que le queda libre al bloque es mayor a nbytes --> escribe los nbytes. Retorna 0.
+
+        // Tomamos el numero retornado por write_data_block()
+        // Si es mayor a 0 --> encontrar siguiente DB next_db()
+        // next_db(file_desc, curr_dis, curr_index, dis_block_offset): retorna block num del siguiente DB
+        // Si quedan ptrs por leer en el DIS block --> retornar block num del siguiente ptr
+        // Si no quedan ptrs por leer en el DIS block --> encontrar el siguiente DIS block next_dis()
+
+    // Falta hacer el while con las verificaciones de cuando parar. 
+    written_bytes = write_data_block(file_desc, curr_data_block, buffer, not_written_bytes, nbytes, total_written_bytes);
+    total_written_bytes += written_bytes;
+
+    if(total_written_bytes < nbytes) // Dudas
+    {
+        unsigned long int next_db_num = next_db(file_desc, curr_index_block, curr_dis_block, curr_data_block);
+        Data_block* new_data_block = data_block_init(next_db_num);
+        memcpy(curr_data_block, new_data_block, sizeof(new_data_block));
+        free(new_data_block);
+    }
+    // Hacer función para verificar que el disco se llenó
+
+    // Hay que agregar la referencia al nuevo index block que potencialmente se creó en next_db. 
+
+    // Al final tenemos que actualizar el index_block -> file_size
+
+    // Retornamos la cantidad de bytes efectivamente escritos.
 }

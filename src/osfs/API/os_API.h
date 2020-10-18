@@ -30,6 +30,7 @@ struct osFile{
 osFile* os_open(char* path, char mode);
 int os_close(osFile* file_desc);
 int os_read(osFile* file_desc, void* buffer, int nbytes);
+int os_write(osFile* file_desc, void* buffer, int nbytes);
 void os_mount(char* diskname);
 void os_bitmap(unsigned num, bool hex);
 int os_exists(char* path);
