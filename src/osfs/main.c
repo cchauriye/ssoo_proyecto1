@@ -140,5 +140,14 @@ int main(int argc, char *argv[])
     // }
     // os_close(f);
 
+    // Probar os_unload caso 1
+    // os_unload("/folder/napkin.txt", "nueva_napkin.txt");
+
+    // Probar os_unload caso 2
+    // os_unload("/IMPORTANT.txt", "nueva_IMPORTANT2.txt");
+
+    // Probar os_unload caso 3
+    // os_unload("/folder/god/shrek.mp4", "nueva_shrek.mp4");
+
     return 0;
 }
