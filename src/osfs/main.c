@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     os_exists("/folder/god/shrekii.mp4");
     
     // Probar os_mkdir
-    // os_bitmap(1, false);
+    //os_bitmap(0, false);
     // os_mkdir("/folder/god/chaurri5");
     os_ls("/folder/god");
     os_ls("/folder/godSDF");
@@ -48,7 +48,10 @@ int main(int argc, char *argv[])
 
     // os_bitmap(1, false);
 
-    // osFile* f = os_open("/folder/god/mora13.txt", 'w');
+    osFile* f = os_open("/folder/go0d/mora22.txt", 'r');
+    //osFile* f2 = os_open("/folder/god/mora13.txt", 'w');
+    //osFile* f3 = os_open("/folder/god/mora16.txt", 'w');
+
     // printf("index block \n hardlinks: %i \n position: %u\n file size: %llu\n", f->index_block->num_hardlinks, f->index_block->position, f->index_block->file_size);
     // printf("f: \nindex blocks used: %lu\n indirect blocks used: %lu\n data blocks used: %lu\n", f->index_blocks_used, f->indirect_blocks_used, f->data_blocks_used);
     // int closed = os_close(f);
@@ -58,11 +61,13 @@ int main(int argc, char *argv[])
     //print_all_entries_from_dir(536679);
     printf("\n");
     //print_all_entries_from_dir(285598);
-    // //os_rm("/folder/god/shrek.mp4");
+    // os_rm("/folder/god/mora17.txt");
+    os_rm("/folder/god/mora16.txt");
     print_all_entries_from_dir(536679);
-    os_mkdir("/folder/god/ejemplo8");
-    os_mkdir("/folder/god/ejemplo8");
-    print_all_entries_from_dir(536679);
+    printf("\n");
+    // os_mkdir("/folder/god/ejemplo8");
+    // os_mkdir("/folder/god/ejemplo8");
+    // print_all_entries_from_dir(536679);
     print_all_entries_from_dir(285598);
     //print_all_entries_from_dir(285598);
 

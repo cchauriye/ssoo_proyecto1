@@ -158,11 +158,17 @@ osFile* os_open(char* path, char mode) {
         
         // Revisamos que no existia el archivo
         if(index_block_num == -1){
+            printf("hola no existe el archivo\n");
             // Buscamos un bloque vacio en el bitmap
             unsigned long int empty_block = find_empty_block();
 
             // Buscamos el bloque dir donde va a ir este archivo
             unsigned long int parent_dir_block = find_parent_block_by_path(path);
+            if (parent_dir_block == -1)
+            {
+                fprintf(stderr, "Ruta inválida para la apertura/creación de un archivo.\n"); 
+                return -1;
+            }
             // Buscamos un empty dir entry en el directorio
             int empty_entry = find_empty_entry(parent_dir_block);
             // Sacamos el nombre del archivo
@@ -186,6 +192,15 @@ osFile* os_open(char* path, char mode) {
     }
 
     // Ahora instanciamos el archivo que existia o que acabamos de crear
+    else if (mode == 'r')
+    {
+        int valid = find_block_by_path(path);
+        if (valid == -1)
+        {
+            fprintf(stderr, "Ruta inválida para la apertura de un archivo.\n"); 
+            return -1;
+        }
+    }
     osFile* file = malloc(sizeof(osFile));
     file->bytes_read = 0;
     file->index_blocks_read = 0;
@@ -263,6 +278,21 @@ int os_rm(char* path){
 
     // Restamos 1 a los Hard Links
     unsigned long int index_block_num = find_block_by_path(path);
+
+    //manejo error si no encuentra el archivo 
+    if (index_block_num == -1)
+        {
+            fprintf(stderr, "Ruta inválida para remover el archivo\n"); 
+            return -1;
+        } 
+    //manejo error si el archivo ya había sido eliminado
+    // if (bloqie->valid = 0)
+    //     {
+    //         fprintf(stderr, "El archivo no existe\n"); 
+    //         return -1;
+    //     }
+
+    
     unsigned long int start = BLOCK_SIZE*index_block_num;
     unsigned char buffer[1];
     read_from_position(start, buffer, 1);
@@ -272,7 +302,7 @@ int os_rm(char* path){
     FILE * pFile;
     pFile = fopen(diskname, "r+");
 
-    //manejo de error
+    //manejo de error lectura disco
     int errnum;
     if (pFile == NULL) {
         errnum = errno;
@@ -316,12 +346,22 @@ void os_hardlink(char*orig, char*dest){
 
     //1. Encontrar la entrada vacía del bloque padre del destino
     long unsigned int parent_block = find_parent_block_by_path(dest);
+    if (parent_block == -1)
+    {
+        fprintf(stderr, "Ruta inválida de destino\n"); 
+        return;
+    }
     int empty_entry = find_empty_entry(parent_block);
     unsigned char* dest_name = find_name_by_path(dest);
     printf("Name: %s\n", dest_name);
 
     //2. Encontrar el bloque ìndice del archivo origen
     unsigned int index_block_orig = find_block_by_path(orig);
+    if (parent_block == -1)
+    {
+        fprintf(stderr, "Ruta inválida de origen\n"); 
+        return;
+    }
 
     //3. Escribir en esa entrada que es un archivo y ponerle un puntero 
     // al bloque indice del origen y el nombre del archivo.
