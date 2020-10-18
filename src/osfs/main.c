@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
     // free(index2);
 
     // Probar os_open
-
     // os_bitmap(1, false);
+
 
     // osFile* f = os_open("/folder/go0d/mora22.txt", 'r');
     osFile* f2 = os_open("/folder/god/mora13.txt", 'w');
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     //int closed = os_close(f2);
     //os_bitmap(1, false);
 
-    
+
     //print_all_entries_from_dir(536679);
     printf("\n");
     //print_all_entries_from_dir(285598);
@@ -70,19 +70,20 @@ int main(int argc, char *argv[])
    
     //print_all_entries_from_dir(285598);
 
+
     //os_hardlink("/folder/god/shrek.mp4", "/foldder/nuevo.mp4");
     //print_all_entries_from_dir(536679);
     //print_all_entries_from_dir(285598);
     //os_mkdir("/folder/god/ejem8/ejemplito9");
-    printf("\n");
-    os_rmdir("/folder/god", true);
-    //os_mkdir("/folder/god/nueva_carpeta");
-    
     // printf("\n");
+    // //print_all_entries_from_dir(285598);
+    // os_rmdir("/folder/god", true);
+    // print_all_entries_from_dir(285598);
+    // // printf("\n");
 
     //print_all_entries_from_dir(536679);
     printf("\n");
-    //print_all_entries_from_dir(285598);
+
     
 
     // os_bitmap(1, false);
@@ -91,14 +92,78 @@ int main(int argc, char *argv[])
     // os_ls("/folder/god");
 
 
-    // Probar os_read
+    // Probar os_read caso 1
     // osFile* f = os_open("/folder/napkin.txt", 'r');
-    // int nbytes = 10000;
+    // int nbytes = 100;
     // unsigned char buffer[nbytes];
     // int bytes_read = os_read(f, buffer, nbytes);
     // printf("bytes_read = %i\n", bytes_read);
-    // printf("buffer: %s\n", buffer);
+    // for (int i = 0; i < bytes_read; i++)
+    // {
+    //     printf("%c", buffer[i]);
+    // }
+    // printf("\nSegundo read\n");
+
+    // nbytes = 900;
+    // unsigned char buffer2[nbytes];
+    // bytes_read = os_read(f, buffer2, nbytes);
+    // printf("bytes_read = %i\n", bytes_read);
+    // for (int i = 0; i < bytes_read; i++)
+    // {
+    //     printf("%c", buffer2[i]);
+    // }
     // os_close(f);
+
+    // Probar os_read caso 2
+    // osFile* f = os_open("/folder/god/shrek.mp4", 'r');
+    // printf("file size: %llu\n", f->index_block->file_size);
+    // int nbytes = 100000;
+    // unsigned char buffer[nbytes];
+    // int bytes_read = os_read(f, buffer, nbytes);
+    // printf("bytes_read = %i\n", bytes_read);
+    // for (int i = 0; i < bytes_read; i++)
+    // {
+    //     printf("%c", buffer[i]);
+    // }
+    // os_close(f);
+
+    // Probar os_read caso 3
+    // osFile* f = os_open("/IMPORTANT.txt", 'r');
+    // printf("file size: %llu\n", f->index_block->file_size);
+    // int nbytes = 30;
+    // unsigned char buffer[nbytes];
+    // int bytes_read = os_read(f, buffer, nbytes);
+    // printf("bytes_read = %i\n", bytes_read);
+    // for (int i = 0; i < bytes_read; i++)
+    // {
+    //     printf("%c", buffer[i]);
+    // }
+
+    // nbytes = 2000;
+    // unsigned char buffer2[nbytes];
+    // bytes_read = os_read(f, buffer2, nbytes);
+    // printf("\n---------------Second read--------------------\n");
+    // printf("bytes_read = %i\n", bytes_read);
+
+    // nbytes = 1000;
+    // unsigned char buffer3[nbytes];
+    // bytes_read = os_read(f, buffer3, nbytes);
+    // printf("---------------Third read--------------------\n");
+    // printf("bytes_read = %i\n", bytes_read);
+    // for (int i = 0; i < bytes_read; i++)
+    // {
+    //     printf("%c", buffer3[i]);
+    // }
+    // os_close(f);
+
+    // Probar os_unload caso 1
+    // os_unload("/folder/napkin.txt", "nueva_napkin.txt");
+
+    // Probar os_unload caso 2
+    // os_unload("/IMPORTANT.txt", "nueva_IMPORTANT2.txt");
+
+    // Probar os_unload caso 3
+
 
     return 0;
 }

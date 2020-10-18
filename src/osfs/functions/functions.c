@@ -356,6 +356,7 @@ int read_data_block(osFile* file_desc, Data_block* curr_data_block, unsigned cha
         file_desc->data_blocks_read ++;
         file_desc->dis_block_offset ++;
     }
+    file_desc->bytes_read += (unsigned long long int)bytes_to_read;
     return bytes_to_read;
 } 
 
@@ -453,6 +454,10 @@ unsigned long int next_db(osFile* file_desc, Index_block* curr_index_block, Dis_
             memcpy(curr_dis_block, new_dis_block, sizeof(new_dis_block));
             free(new_dis_block);
             return_db_block_num = curr_dis_block->pointers[0];
+            // printf("avance de dis\n");
+            // printf("index offset: %i\n", file_desc->index_block_offset);
+            // printf("dis offset: %i\n", file_desc->dis_block_offset);
+            // printf("data offset: %i\n", file_desc->data_block_offset);
             return return_db_block_num;
         }
         else
@@ -460,10 +465,15 @@ unsigned long int next_db(osFile* file_desc, Index_block* curr_index_block, Dis_
             // Avanzamos un index, actualizamos dis y db
             unsigned long int next_index_num = curr_index_block->next_index;
             Index_block* next_index_block = index_block_init(next_index_num, 0);
-            memcpy(curr_index_block, next_index_block, sizeof(new_index_block));
+            memcpy(curr_index_block, next_index_block, sizeof(next_index_block));
             free(next_index_block);
             file_desc->index_block_offset = 0;
             file_desc->index_blocks_read ++;
+            // printf("----------------------------\n");
+            // printf("avance de index\n");
+            // printf("index offset: %i\n", file_desc->index_block_offset);
+            // printf("dis offset: %i\n", file_desc->dis_block_offset);
+            // printf("data offset: %i\n", file_desc->data_block_offset);
 
             // Actualizamos el dis
             Dis_block* new_dis_block = dis_block_init(curr_index_block->pointers[0]);

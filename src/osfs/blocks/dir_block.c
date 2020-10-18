@@ -102,14 +102,14 @@ Index_block* index_block_init(unsigned int block_number, int first){
       index_block -> num_pointers = 511;
       // Leemos los siguientes 8 + 2036 bytes
       buff_size = 2044;
-      unsigned char buffer4[buff_size];
-      read_from_position(2048*block_number, buffer4, buff_size);
+      unsigned char buffer5[buff_size];
+      read_from_position(2048*block_number, buffer5, buff_size);
       for(int i=0; i<511; i++){
         pointer = 0;
-        pointer = (pointer + buffer4[4*i + 0]) << 8;
-        pointer = (pointer + buffer4[4*i + 1]) << 8;
-        pointer = (pointer + buffer4[4*i + 2]) << 8;
-        pointer = (pointer + buffer4[4*i + 3]);
+        pointer = (pointer + buffer5[4*i + 0]) << 8;
+        pointer = (pointer + buffer5[4*i + 1]) << 8;
+        pointer = (pointer + buffer5[4*i + 2]) << 8;
+        pointer = (pointer + buffer5[4*i + 3]);
         index_block -> pointers[i] = pointer;
       }
     }
