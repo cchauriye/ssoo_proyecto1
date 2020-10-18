@@ -390,6 +390,7 @@ void os_rmdir(char*path, bool recursive){
     fwrite(buffer, 1, 1, pFile);
     fclose(pFile);
     }
+}
 
 
     

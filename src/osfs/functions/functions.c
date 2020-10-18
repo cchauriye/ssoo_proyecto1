@@ -286,6 +286,7 @@ void write_entry_block(unsigned long int parent_block, unsigned int index_block,
     fwrite(name, strlen(name), 1, pFile);
     fclose(pFile);
     return;
+}
 
 int read_data_block(osFile* file_desc, Data_block* curr_data_block, unsigned char* small_buffer, int not_read_bytes, int nbytes){
     
