@@ -277,7 +277,7 @@ void os_hardlink(char*orig, char*dest){
     fwrite(buffer, 1, 1, pFile);
     fclose(pFile);
 
-    printf("bloque_padre: %i \n", parent_block);
+   // printf("bloque_padre: %i \n", parent_block);
     return;
 }
 

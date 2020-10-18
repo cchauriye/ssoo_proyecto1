@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     // int closed = os_close(f);
     //os_bitmap(1, false);
 
-    // Probar os_ls
+
     
     print_all_entries_from_dir(536679);
     printf("\n");
@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
     os_rmdir("/folder/god", true);
     print_all_entries_from_dir(285598);
     // printf("\n");
+
     print_all_entries_from_dir(536679);
     printf("\n");
     //print_all_entries_from_dir(285598);
