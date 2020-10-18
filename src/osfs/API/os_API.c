@@ -392,10 +392,6 @@ void os_rmdir(char*path, bool recursive){
     }
 }
 
-
-    
-    
-
 int os_read(osFile* file_desc, void* buffer, int nbytes){
 
     // Revisar si nbytes es mayor que file_size - bytes_read
