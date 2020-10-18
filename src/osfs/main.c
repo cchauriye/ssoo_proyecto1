@@ -33,22 +33,51 @@ int main(int argc, char *argv[])
     // printf("hardlinks: %i\n", index->num_hardlinks);
     // free(index);
     // printf("-----OS RM--------\n");
-    // os_rm("/IMPORTANT.txt");
+    //os_rm("/IMPORTANT.txt");
     // os_ls("/");
     // Index_block* index2 = index_block_init(index_block, 1);
     // printf("hardlinks: %i\n", index2->num_hardlinks);
     // free(index2);
 
     // Probar os_open
+
     // os_bitmap(1, false);
+
     // osFile* f = os_open("/folder/god/mora13.txt", 'w');
     // printf("index block \n hardlinks: %i \n position: %u\n file size: %llu\n", f->index_block->num_hardlinks, f->index_block->position, f->index_block->file_size);
     // printf("f: \nindex blocks used: %lu\n indirect blocks used: %lu\n data blocks used: %lu\n", f->index_blocks_used, f->indirect_blocks_used, f->data_blocks_used);
     // int closed = os_close(f);
+    //os_bitmap(1, false);
+
+
+    
+    print_all_entries_from_dir(536679);
+    printf("\n");
+    print_all_entries_from_dir(285598);
+    // //os_rm("/folder/god/shrek.mp4");
+    os_mkdir("/folder/god/ejemplo8");
+    os_mkdir("/folder/god/ejemplo8/ejemplo9");
+    print_all_entries_from_dir(285598);
+
+    //os_hardlink("/folder/god/shrek.mp4", "/folder/nuevo.mp4");
+    //print_all_entries_from_dir(285598);
+    //os_mkdir("/folder/god/ejem8/ejemplito9");
+    printf("\n");
+    //print_all_entries_from_dir(285598);
+    os_rmdir("/folder/god", true);
+    print_all_entries_from_dir(285598);
+    // printf("\n");
+
+    print_all_entries_from_dir(536679);
+    printf("\n");
+    //print_all_entries_from_dir(285598);
+    
+
     // os_bitmap(1, false);
 
     // Probar os_ls
     // os_ls("/folder/god");
+
 
     // Probar os_read
     osFile* f = os_open("/folder/napkin.txt", 'r');
