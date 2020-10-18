@@ -321,6 +321,7 @@ int read_data_block(osFile* file_desc, Data_block* curr_data_block, unsigned cha
         file_desc->data_blocks_read ++;
         file_desc->dis_block_offset ++;
     }
+    file_desc->bytes_read += bytes_to_read;
     return bytes_to_read;
 } 
 
