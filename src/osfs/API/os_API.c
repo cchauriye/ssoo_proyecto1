@@ -86,9 +86,9 @@ int os_exists(char* path){
     }
         if (find_block_by_path(path) == -1)
         {
-            return -1;
+            return 0;
         }
-        return 0;
+        return 1;
     
 }
 
