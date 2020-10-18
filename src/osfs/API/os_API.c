@@ -11,16 +11,40 @@
 
 char* diskname;
 unsigned int BLOCK_SIZE = 2048;
+bool DISKNEAME_VALID = false;
 
 // Establece como variable global la ruta local del disco
 void os_mount(char* disk){
     diskname = disk;
+
+    //manejo de error si no existe el disco
+    FILE * pf;
+    int errnum;
+    pf = fopen (disk, "rb");
+        
+    if (pf == NULL) {
+    
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+    } else {
+        DISKNEAME_VALID = true;
+        fclose (pf);
+    }
+    return;
 }
 
-// Imprimir bitmap  AL FINAL ARREGLAR A LA CANTIDAD DE BYTES CORRECTA
+// Imprimir bitmap 
 void os_bitmap(unsigned num, bool hex){
-    long int buff_size = 15;
+    if(!DISKNEAME_VALID){
+        return;
+    }
+    long int buff_size = 2048;
     unsigned char buffer[buff_size];
+
+    if (num <0 || num >64){
+        fprintf(stderr, "Número de bloque bitmap ingresado inválido.\n"); 
+        return;
+    }
     if (num == 0){
         for (int b = 1; b < 65; b++)
         {
@@ -29,15 +53,14 @@ void os_bitmap(unsigned num, bool hex){
                 unsigned char hex_buffer[buff_size * 2];
                 print_hex_buffer(hex_buffer, buffer, buff_size);
                 for (int i=0; i<buff_size*2; i++){
-                    printf("%c", hex_buffer[i]);
+                    fprintf(stderr, "%c", hex_buffer[i]);
                 }
-                printf("\n");
+                fprintf(stderr,"\n");
             }
             else {
                 print_binary_buffer(buffer, buff_size);
             }
-        }
-        
+        }      
     }
     else {
         read_from_position(BLOCK_SIZE*num, buffer, buff_size);
@@ -45,28 +68,37 @@ void os_bitmap(unsigned num, bool hex){
             unsigned char hex_buffer[buff_size * 2];
             print_hex_buffer(hex_buffer, buffer, buff_size);
             for (int i=0; i<buff_size*2; i++){
-                printf("%c", hex_buffer[i]);
+                fprintf(stderr, "%c", hex_buffer[i]);
             }
-            printf("\n");
+            fprintf(stderr, "\n");
         }
         else {
             print_binary_buffer(buffer, buff_size);
         }
     }
+    
 }
 
-// Verificar si archivo existe.
+// Verificar si archivo existe. Retorna 0 si exsite, -1 caso contrario
 int os_exists(char* path){
-    if (find_block_by_path(path) == -1)
-    {
-        return 0;
+    if(!DISKNEAME_VALID){
+        return -1;
     }
-    return 1;
+        if (find_block_by_path(path) == -1)
+        {
+            return 0;
+        }
+        return 1;
+    
 }
 
 void os_ls(char* path){
+    if(!DISKNEAME_VALID){
+        return;
+    }
     long unsigned int dir_block_num = find_block_by_path(path);
     if (dir_block_num == -1){
+        fprintf(stderr, "La ruta entregada no es válida.\n"); 
         return;
     }
     else{
@@ -75,14 +107,17 @@ void os_ls(char* path){
 }
 
 //crear un direcotrio con el path dado
-int os_mkdir(char* path){  
+int os_mkdir(char* path){ 
+    if(!DISKNEAME_VALID){
+        return -1;
+    } 
     // Buscamos un bloque vacio en el bitmap
     unsigned long int empty_block = find_empty_block();
     // Buscamos el bloque directorio donde tenemos que crear la entrada
     unsigned long int parent_block_num = find_parent_block_by_path(path);
     if (parent_block_num == -1) {
-        printf("Ruta no es válida");
-        return 1;
+        fprintf(stderr, "La ruta para crear el directorio no es válida.\n");
+        return -1;
     }
 
     char *slash = path;
@@ -93,15 +128,23 @@ int os_mkdir(char* path){
         slash = strpbrk(slash+1, "\\/");
         dir_name = strndup(path, slash - path);
         leftover = strdup(slash+1);
-        printf("leftover: %s\n", leftover);
         path = leftover;
         slash = leftover;
     };
     dir_name = slash;
-    printf("dir name: %s\n", dir_name);
+
+    int exists = find_entry_num_by_name(parent_block_num, dir_name);
+    if (exists != -1){
+        fprintf(stderr, "Ya existe una carpeta con el mismo nombre.\n"); 
+        return -1;
+    }
 
     // Buscamos una entrada vacia
     int empty_entry = find_empty_entry(parent_block_num);
+    if (empty_entry == -1){
+        fprintf(stderr, "No hay más espacio disponible en esta carpeta.\n"); 
+        return -1;
+    }
 
     // Creamos el directorio
     create_dir_entry(parent_block_num, empty_block, empty_entry, dir_name, 2);
@@ -110,6 +153,9 @@ int os_mkdir(char* path){
 
 osFile* os_open(char* path, char mode) {
 
+    if(!DISKNEAME_VALID){
+        return;
+    }
     // Modo escritura --> creamos un archivo 
     if(mode == 'w') {
         unsigned long int index_block_num = find_block_by_path(path);
@@ -121,6 +167,11 @@ osFile* os_open(char* path, char mode) {
 
             // Buscamos el bloque dir donde va a ir este archivo
             unsigned long int parent_dir_block = find_parent_block_by_path(path);
+            if (parent_dir_block == -1)
+            {
+                fprintf(stderr, "Ruta inválida para la apertura/creación de un archivo.\n"); 
+                return -1;
+            }
             // Buscamos un empty dir entry en el directorio
             int empty_entry = find_empty_entry(parent_dir_block);
             // Sacamos el nombre del archivo
@@ -144,6 +195,15 @@ osFile* os_open(char* path, char mode) {
     }
 
     // Ahora instanciamos el archivo que existia o que acabamos de crear
+    else if (mode == 'r')
+    {
+        int valid = find_block_by_path(path);
+        if (valid == -1)
+        {
+            fprintf(stderr, "Ruta inválida para la apertura de un archivo.\n"); 
+            return -1;
+        }
+    }
     osFile* file = malloc(sizeof(osFile));
     file->bytes_read = 0;
     file->index_blocks_read = 0;
@@ -195,12 +255,18 @@ osFile* os_open(char* path, char mode) {
 }
 
 int os_close(osFile* file_desc){
+    if(!DISKNEAME_VALID){
+        return -1;
+    }
     free(file_desc->index_block);
     free(file_desc);
     return 0;
 }
 
 int os_rm(char* path){
+    if(!DISKNEAME_VALID){
+        return -1;
+    }
     char path2[100];
     strcpy(path2, path);
     // Extract the first token
@@ -215,6 +281,14 @@ int os_rm(char* path){
 
     // Restamos 1 a los Hard Links
     unsigned long int index_block_num = find_block_by_path(path);
+
+    //manejo error si no encuentra el archivo 
+    if (index_block_num == -1)
+        {
+            fprintf(stderr, "Ruta inválida para remover el archivo\n"); 
+            return -1;
+        } 
+
     unsigned long int start = BLOCK_SIZE*index_block_num;
     unsigned char buffer[1];
     read_from_position(start, buffer, 1);
@@ -223,6 +297,15 @@ int os_rm(char* path){
     buffer[0] = num_of_hl;
     FILE * pFile;
     pFile = fopen(diskname, "r+");
+
+    //manejo de error lectura disco
+    int errnum;
+    if (pFile == NULL) {
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+        return -1;
+    }
+
     fseek(pFile, start, SEEK_SET);
     fwrite(buffer, 1, 1, pFile);
     fclose(pFile);
@@ -241,7 +324,7 @@ int os_rm(char* path){
     fwrite(buffer, 1, 1, pFile);
     fclose(pFile);
 
-     // Dejamos el bitmap del bloque indice en 0
+    // Dejamos el bitmap del bloque indice en 0
     modify_bitmap(entry_block_num, 0);
 
     return 0;
@@ -253,14 +336,27 @@ int os_rm(char* path){
 */
 void os_hardlink(char*orig, char*dest){
 
+    if(!DISKNEAME_VALID){
+        return;
+    }
+
     //1. Encontrar la entrada vacía del bloque padre del destino
     long unsigned int parent_block = find_parent_block_by_path(dest);
+    if (parent_block == -1)
+    {
+        fprintf(stderr, "Ruta inválida de destino\n"); 
+        return;
+    }
     int empty_entry = find_empty_entry(parent_block);
     unsigned char* dest_name = find_name_by_path(dest);
-    printf("Name: %s\n", dest_name);
 
     //2. Encontrar el bloque ìndice del archivo origen
     unsigned int index_block_orig = find_block_by_path(orig);
+    if (parent_block == -1)
+    {
+        fprintf(stderr, "Ruta inválida de origen\n"); 
+        return;
+    }
 
     //3. Escribir en esa entrada que es un archivo y ponerle un puntero 
     // al bloque indice del origen y el nombre del archivo.
@@ -279,20 +375,32 @@ void os_hardlink(char*orig, char*dest){
 
     FILE * pFile;
     pFile = fopen(diskname, "r+");
+
+    //manejo de error
+    int errnum;
+    if (pFile == NULL) {
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+        return;
+    }
+
     fseek(pFile, start, SEEK_SET);
     fwrite(buffer, 1, 1, pFile);
     fclose(pFile);
-
-   // printf("bloque_padre: %i \n", parent_block);
     return;
 }
 
-void os_rmdir(char*path, bool recursive){
+
+int os_rmdir(char*path, bool recursive){
+
+    if(!DISKNEAME_VALID){
+        return -1;
+    }
     unsigned long int block_num = find_block_by_path(path);
-    printf("BLock_num: %i\n", block_num);
     if (block_num == -1)
     {
-        printf("La ruta proporcionada no es válida, no se han encontrado directorios con ese nombre\n");
+        fprintf(stderr, "La ruta proporcionada no es válida, no se han encontrado directorios con ese nombre\n");
+        return -1;
     }
     else
     {
@@ -300,63 +408,44 @@ void os_rmdir(char*path, bool recursive){
     Dir_block*  dir_block = dir_block_init(block_num);
     for (int i = 0; i < 64; i++)
     {
-        printf("EStoy en el i: %i del for\n", i);
         Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
         if (dir_entry->valid) //significa que está ocupado
         {
             if (recursive){
-            //recorro las entradas 
-            //CASO 1: son archivos y los borro con os_rm
-            //Armar el path para usar os_rm o usar parte de os_rm desde block_num
-            // printf("BLOQUE: %i\n", block_num);
-            // printf("path que entró al manejo path: %s\n", path);
-            // printf("queremos eliminar: %s\n", dir_entry->name);
-            // printf("EL valid es: %i\n",  dir_entry->valid);
-            char entry_path[2000];
-            strcpy(entry_path, path);
-            char file_name[200] = "/";
-            strcat(file_name, dir_entry->name);
-            strcat(entry_path, file_name);
-            printf("EL PATH HACIA EL ARCHIVO ES: %s\n", entry_path);
+                //recorro las entradas 
+                char entry_path[2000];
+                strcpy(entry_path, path);
+                char file_name[200] = "/";
+                strcat(file_name, dir_entry->name);
+                strcat(entry_path, file_name);
 
-            //si es archivo, eliminamos
-            if (dir_entry->valid == 1)
-            {
-                printf("Borré archivo %s\n",  dir_entry->name);
-                os_rm(entry_path);
-            }
-            //si es directorio, aplicamos la funciòn recursivamente
-            else if (dir_entry->valid == 2) 
-            {
-                printf("eliminando directorio %s\n", dir_entry->name);
-                os_rmdir(entry_path, true);
-            }
-            
-            
-            
-            
-            //CASO 2: son directorios uso la funcion recursivamente  
+                //si es archivo, eliminamos
+                if (dir_entry->valid == 1)
+                {
+                    os_rm(entry_path);
+                }
+                //si es directorio, aplicamos la funciòn recursivamente
+                else if (dir_entry->valid == 2) 
+                {
+                    os_rmdir(entry_path, true);
+                }
             }
             else{
-                printf("No ejecuta funcion porque hay archivos y es no recursivo\n");
-                return;
+                free(dir_entry);
+                free(dir_block);
+                return 0;
             }
-        // printf("La entrada %i del bloque %i está vacía\n", i, block_num);
-        //free(dir_entry);
-        // free(dir_block);
         } 
         free(dir_entry);
     }
     free(dir_block);
-    //Si llego aca o estaba vacia o ya se borro todo lo de dentro
+
     //Para borrar directorio:
     //1- Libero el bitmap
-
     modify_bitmap(block_num,0);
-    printf("Modifica el bitmap\n");
+
     //2- Libero la entrada del directorio padre los 2 bit= 00 ¿Es necesario puntero a 0 y nombre a 0? 
     unsigned int parent_block = find_parent_block_by_path(path);
-    //unsigned char* name = find_name_by_path(path); //ACA SE CAE,la funcion funciona solo con cosas con extencion tipo ejemplo.txt Hay que arreglara!!
     char *slash = path;
     char* dir_name;
     char* file_name;
@@ -365,31 +454,41 @@ void os_rmdir(char*path, bool recursive){
         slash = strpbrk(slash+1, "\\/");
         dir_name = strndup(path, slash - path);
         leftover = strdup(slash+1);
-        printf("leftover: %s\n", leftover);
         path = leftover;
         slash = leftover;
     };
-    printf("Dir name \n");
     dir_name = slash;
-    printf("%s\n", dir_name);
     unsigned long int  num_entry = find_entry_num_by_name(parent_block, dir_name);
     unsigned long int start = 2048*parent_block +  32*num_entry;
     int value = 0;
-
-    FILE * pFile;
     
+    FILE * pFile;
     start = BLOCK_SIZE*parent_block + num_entry*32;
     unsigned char buffer[1];
     read_from_position(start, buffer, 1);
     buffer[0] = buffer[0] & 0b00111111;
+
     pFile = fopen(diskname, "r+");
+    //manejo de error
+    int errnum;
+    if (pFile == NULL) {
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+        return -1;
+    }
+
     fseek(pFile, start, SEEK_SET);
     fwrite(buffer, 1, 1, pFile);
     fclose(pFile);
     }
+    return 0;
 }
 
 int os_read(osFile* file_desc, void* buffer, int nbytes){
+
+    if(!DISKNEAME_VALID){
+        return;
+    }
     // Revisar si nbytes es mayor que file_size - bytes_read
     if (nbytes > ((file_desc->index_block->file_size) - file_desc->bytes_read))
     {
@@ -490,12 +589,9 @@ int os_read(osFile* file_desc, void* buffer, int nbytes){
         // Traspasar small buffer al buffer
         for (int i = 0; i <read_bytes; i++)
         {
-            // memcpy(buffer2, small_buffer, read_bytes);
             buffer2[buffer_offset + i] = small_buffer[i];
         }
         total_read_bytes += read_bytes;
-        // strcpy(buffer2, small_buffer);
-        // buffer = &small_buffer;
 
         if(not_read_bytes)
         {
@@ -510,14 +606,10 @@ int os_read(osFile* file_desc, void* buffer, int nbytes){
     free(curr_dis_block);
     free(curr_index_block);
 
-    // for (int i = 0; i < total_read_bytes; i++)
-    // {
-    //     printf("%c", buffer2[i]);
-    // }
-    
-    memcpy(buffer,(unsigned char *)buffer2, total_read_bytes);
+    memcpy(buffer, buffer2, total_read_bytes);
     return total_read_bytes;
 }
+
 
 int os_write(osFile* file_desc, void* buffer, int nbytes){
     

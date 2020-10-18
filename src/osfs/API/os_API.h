@@ -39,6 +39,6 @@ char* dir_name_from_path(char* path);
 long unsigned int find_block_by_path(char* path);
 int os_rm(char* path);
 int os_mkdir(char* path);
-void os_rmdir(char* path, bool recursive);
+int os_rmdir(char* path, bool recursive);
 void os_hardlink(char*orig, char*dest);
-int os_unload(char* orig, char* dest);
+
