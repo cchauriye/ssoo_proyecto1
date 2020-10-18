@@ -22,12 +22,14 @@ char* find_name_by_path(char* path){
         slash = strpbrk(slash+1, "\\/");
         dir_name = strndup(path, slash - path);
         leftover = strdup(slash+1);
+
         //printf("leftover: %s\n", leftover);
         path = leftover;
         slash = leftover;
     };
     dir_name = slash;
 return dir_name;
+
 }
 
 void modify_bitmap(unsigned long int block_num, int value){
@@ -221,8 +223,17 @@ void create_dir_entry(unsigned long int parent_block, unsigned int empty_block, 
     // printf("Número de bloque: \n%i \n%i \n%i\n", buffer1[0], buffer1[1], buffer1[2]);
     fwrite(buffer1, 1, 3, pFile);
 
-    // // Escribimos nombre del archivo
+    unsigned char buffer_set_zero[29];
+    for (int i = 0; i < 29; i++)
+    {
+        buffer_set_zero[i] = 0;
+    }
+    //dejamos el nombre en 0
     start = 2048*parent_block +  32*empty_entry + 3;
+    fseek(pFile, start, SEEK_SET);
+    fwrite(buffer_set_zero, 1, 29, pFile);
+
+    // // Escribimos nombre del archivo
     fseek(pFile, start, SEEK_SET);
     fwrite(name, strlen(name), 1, pFile);
     fclose(pFile);
