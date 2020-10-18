@@ -40,6 +40,11 @@ void os_bitmap(unsigned num, bool hex){
     }
     long int buff_size = 2048;
     unsigned char buffer[buff_size];
+
+    if (num <0 || num >64){
+        fprintf(stderr, "Número de bloque bitmap ingresado inválido.\n"); 
+        return;
+    }
     if (num == 0){
         for (int b = 1; b < 65; b++)
         {
@@ -285,14 +290,7 @@ int os_rm(char* path){
             fprintf(stderr, "Ruta inválida para remover el archivo\n"); 
             return -1;
         } 
-    //manejo error si el archivo ya había sido eliminado
-    // if (bloqie->valid = 0)
-    //     {
-    //         fprintf(stderr, "El archivo no existe\n"); 
-    //         return -1;
-    //     }
 
-    
     unsigned long int start = BLOCK_SIZE*index_block_num;
     unsigned char buffer[1];
     read_from_position(start, buffer, 1);
@@ -328,7 +326,7 @@ int os_rm(char* path){
     fwrite(buffer, 1, 1, pFile);
     fclose(pFile);
 
-     // Dejamos el bitmap del bloque indice en 0
+    // Dejamos el bitmap del bloque indice en 0
     modify_bitmap(entry_block_num, 0);
 
     return 0;
@@ -452,6 +450,8 @@ void os_rmdir(char*path, bool recursive){
             }
             else{
                 printf("No ejecuta funcion porque hay archivos y es no recursivo\n");
+                free(dir_entry);
+                free(dir_block);
                 return;
             }
         // printf("La entrada %i del bloque %i está vacía\n", i, block_num);
@@ -488,7 +488,7 @@ void os_rmdir(char*path, bool recursive){
     unsigned long int  num_entry = find_entry_num_by_name(parent_block, dir_name);
     unsigned long int start = 2048*parent_block +  32*num_entry;
     int value = 0;
-
+    
     FILE * pFile;
     start = BLOCK_SIZE*parent_block + num_entry*32;
     unsigned char buffer[1];

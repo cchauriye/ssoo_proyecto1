@@ -18,14 +18,14 @@ int main(int argc, char *argv[])
     
     os_mount(argv[1]);   
 
-    os_exists("/folder/god/shrek.mp4");
-    os_exists("/folder/god/shrekii.mp4");
+    // os_exists("/folder/god/shrek.mp4");
+    // os_exists("/folder/god/shrekii.mp4");
     
     // Probar os_mkdir
     //os_bitmap(0, false);
     // os_mkdir("/folder/god/chaurri5");
-    os_ls("/folder/god");
-    os_ls("/folder/godSDF");
+    // os_ls("/folder/god");
+    // os_ls("/folder/godSDF");
     // os_bitmap(1, false);
 
     // Probar os_rm
@@ -48,13 +48,13 @@ int main(int argc, char *argv[])
 
     // os_bitmap(1, false);
 
-    osFile* f = os_open("/folder/go0d/mora22.txt", 'r');
-    //osFile* f2 = os_open("/folder/god/mora13.txt", 'w');
+    // osFile* f = os_open("/folder/go0d/mora22.txt", 'r');
+    // osFile* f2 = os_open("/folder/god/mora13.txt", 'w');
     //osFile* f3 = os_open("/folder/god/mora16.txt", 'w');
 
     // printf("index block \n hardlinks: %i \n position: %u\n file size: %llu\n", f->index_block->num_hardlinks, f->index_block->position, f->index_block->file_size);
     // printf("f: \nindex blocks used: %lu\n indirect blocks used: %lu\n data blocks used: %lu\n", f->index_blocks_used, f->indirect_blocks_used, f->data_blocks_used);
-    // int closed = os_close(f);
+    //int closed = os_close(f2);
     //os_bitmap(1, false);
 
     
@@ -62,22 +62,24 @@ int main(int argc, char *argv[])
     printf("\n");
     //print_all_entries_from_dir(285598);
     // os_rm("/folder/god/mora17.txt");
-    os_rm("/folder/god/mora16.txt");
-    print_all_entries_from_dir(536679);
+    //os_rm("/folder/god/mora13.txt");
     printf("\n");
     // os_mkdir("/folder/god/ejemplo8");
     // os_mkdir("/folder/god/ejemplo8");
-    // print_all_entries_from_dir(536679);
+    
     print_all_entries_from_dir(285598);
     //print_all_entries_from_dir(285598);
 
-    //os_hardlink("/folder/god/shrek.mp4", "/folder/nuevo.mp4");
+    //os_hardlink("/folder/god/shrek.mp4", "/foldder/nuevo.mp4");
+    print_all_entries_from_dir(536679);
     //print_all_entries_from_dir(285598);
     //os_mkdir("/folder/god/ejem8/ejemplito9");
     printf("\n");
     //print_all_entries_from_dir(285598);
-    // os_rmdir("/folder/god", true);
-    //print_all_entries_from_dir(285598);
+    os_rmdir("/folder/god", true);
+    //os_mkdir("/folder/god/nueva_carpeta");
+    
+    print_all_entries_from_dir(285598);
     // printf("\n");
 
     //print_all_entries_from_dir(536679);
