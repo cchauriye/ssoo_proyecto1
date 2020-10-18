@@ -83,7 +83,6 @@ int os_mkdir(char* path){
     if (parent_block_num == -1) {
         printf("Ruta no es válida");
         return 1;
-
     }
 
     char *slash = path;
@@ -522,73 +521,134 @@ int os_read(osFile* file_desc, void* buffer, int nbytes){
 
 int os_write(osFile* file_desc, void* buffer, int nbytes){
     
-    // Avanzamos hasta el último index_block
-    unsigned long int curr_index_num = file_desc->index_block_num;
-    unsigned long int next_index_num = file_desc->index_block->next_index;
-    Index_block* curr_index_block;
+    unsigned char buffer2[nbytes]; 
+    memcpy(buffer2,(unsigned char *)buffer, nbytes); // Falta caso borde
+    file_desc -> index_block -> file_size = nbytes; // Falta caso borde
 
-    if (file_desc->index_blocks_used == 1)
+    // El bloque es nuevo (index vacio)
+    if(file_desc -> index_block -> file_size == 0)
     {
-        curr_index_block = index_block_init(curr_index_num, 1);
-    }
-    else
-    {
-        for (unsigned long int i = 0; i < file_desc->index_blocks_used; i++)
+        // Calculamos la cantidad de bloques que utilizará el archivo
+        unsigned long int db_used = nbytes / BLOCK_SIZE;
+        file_desc -> data_blocks_used = db_used;
+        file_desc -> data_block_offset = nbytes % BLOCK_SIZE;
+        if(nbytes % BLOCK_SIZE)
         {
-            Index_block* next_index_block = index_block_init(next_index_num, 0);
-            curr_index_num = next_index_num;
-            next_index_num = next_index_block->next_index;
+            db_used++;
+        }
+
+        // Creamos un maxi array que contiene todos los punteros a db que usaremos
+        unsigned long int maxito[db_used];
+
+        file_desc -> indirect_blocks_used = db_used / 512;
+        file_desc -> dis_block_offset = db_used % 512;
+        if(db_used % 512)
+        {
+            db_used++;
+        }
+
+        file_desc -> index_blocks_used = 1;
+        if(file_desc -> indirect_blocks_used <= 509)
+        {
+            file_desc -> index_block_offset = file_desc -> indirect_blocks_used % 509;
+        }
+        else
+        {
+            file_desc -> index_blocks_used += (file_desc -> indirect_blocks_used - 509) / 511;
+            unsigned long int indies = file_desc -> indirect_blocks_used - 509 % 511;
+            if(indies)
+            {
+                file_desc -> index_blocks_used ++;
+            }
+            file_desc -> index_block_offset = file_desc -> indirect_blocks_used % 511;
+        }
+        // Creamos el resto de los index block
+
+        unsigned long int empty_block;
+        empty_block = find_empty_block();
+
+        for(unsigned long int i = 0; i < file_desc -> index_blocks_used - 1; i++)
+        {
+            modify_bitmap(empty_block, 1);
+            if(i==0)
+            {
+                file_desc -> index_block -> next_index = empty_block;
+            }
+            else
+            {
+                Index_block* new_index_block = index_block_init(empty_block, 0);
+                empty_block = find_empty_block();
+                new_index_block -> next_index = empty_block;
+                free(new_index_block);
+            }
+        }
+
+        Index_block* curr_index_block = index_block_init(file_desc->index_block_num, 1);
+
+        empty_block = find_empty_block();
+        unsigned long int next_index;
+        next_index = curr_index_block -> next_index;
+        unsigned long int counter = 0;
+
+        for(unsigned long int i = 0; i < file_desc -> index_blocks_used; i++)
+        {
+            for(unsigned long int j = 0; j < curr_index_block ->num_pointers; j++)
+            {
+                curr_index_block -> pointers[j] = empty_block;
+                modify_bitmap(empty_block, 1);
+                empty_block = find_empty_block();
+                
+                Dis_block* new_dis_block = dis_block_init(empty_block);
+                for(unsigned long int k = 0; k < 512; k++)
+                {
+                    new_dis_block -> pointers[k] = empty_block;
+                    modify_bitmap(empty_block, 1);
+                    maxito[counter] = empty_block;
+                    counter++;
+                    empty_block = find_empty_block();
+                }
+                free(new_dis_block);
+            }
+            Index_block* next_index_block = index_block_init(next_index, 0);
+            next_index = next_index_block -> next_index;
+            memcpy(curr_index_block, next_index_block, sizeof(next_index_block));
             free(next_index_block);
         }
-        curr_index_block = index_block_init(curr_index_num, 0);
+        free(curr_index_block);
+
+        // Ahora que tenemos a maxito podemos llegar y escribir
+        FILE * pFile;
+        pFile = fopen(diskname, "r+");
+        unsigned long int start;
+        unsigned char small_buffer[2048];
+
+        for(unsigned long int m = 0; m < db_used; m++)
+        {
+            start = m*2048;
+            fseek(pFile, start, SEEK_SET);
+            for(unsigned long int s = 0; s < BLOCK_SIZE; s++)
+            {
+                small_buffer[s] = buffer2[BLOCK_SIZE*m + s];
+            }
+
+            if(m < db_used - 1)
+            {
+                fwrite(small_buffer, BLOCK_SIZE, 1, pFile);
+            }
+            else
+            {
+                fwrite(small_buffer, file_desc -> data_block_offset, 1, pFile);
+            }
+            fclose(pFile);
+        }
     }
 
-    // Determinamos los offsets a partir de la cantidad de bloques usados
-    unsigned long int bytes_used = file_desc -> index_block -> file_size;
-    
-    file_desc -> data_block_offset = bytes_used % 2048;
-    file_desc -> dis_block_offset = file_desc -> data_blocks_used % 512;
-    
-    if (file_desc -> index_blocks_used == 1){
-        file_desc -> index_block_offset = file_desc -> indirect_blocks_used % 509;
-    }
-    else{
-        file_desc -> index_block_offset = (file_desc -> indirect_blocks_used-509) % 511; // Verificar
-    }
-
-    // Instanciamos el último dis_block
-    Dis_block* curr_dis_block = dis_block_init(curr_index_block->pointers[file_desc->index_block_offset]);
-
-    // Instanciamos el último data_block
-    Data_block* curr_data_block = data_block_init(curr_dis_block->pointers[file_desc->dis_block_offset]);
-
-    int written_bytes = 0;
-    int total_written_bytes = 0;
-    int not_written_bytes = nbytes;
-    // unsigned char buffer[nbytes];
-
-    // Happy path:
-        // Usamos write_data_block
-        // Si lo que le queda libre al bloque es menor a nbytes--> escribe lo que queda. Retorna cuanto escribió.
-        // Si lo que le queda libre al bloque es mayor a nbytes --> escribe los nbytes. Retorna 0.
-
-        // Tomamos el numero retornado por write_data_block()
-        // Si es mayor a 0 --> encontrar siguiente DB next_db()
-        // next_db(file_desc, curr_dis, curr_index, dis_block_offset): retorna block num del siguiente DB
-        // Si quedan ptrs por leer en el DIS block --> retornar block num del siguiente ptr
-        // Si no quedan ptrs por leer en el DIS block --> encontrar el siguiente DIS block next_dis()
-
-    // Falta hacer el while con las verificaciones de cuando parar. 
-    written_bytes = write_data_block(file_desc, curr_data_block, buffer, not_written_bytes, nbytes, total_written_bytes);
-    total_written_bytes += written_bytes;
-
-    if(total_written_bytes < nbytes) // Dudas
+    // El bloque ya existe 
+    else
     {
-        unsigned long int next_db_num = next_db(file_desc, curr_index_block, curr_dis_block, curr_data_block);
-        Data_block* new_data_block = data_block_init(next_db_num);
-        memcpy(curr_data_block, new_data_block, sizeof(new_data_block));
-        free(new_data_block);
+
     }
+
     // Hacer función para verificar que el disco se llenó
 
     // Hay que agregar la referencia al nuevo index block que potencialmente se creó en next_db. 
