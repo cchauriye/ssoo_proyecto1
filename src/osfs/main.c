@@ -15,8 +15,9 @@ extern char* diskname;
 
 int main(int argc, char *argv[])
 {
+    
     os_mount(argv[1]);    
-
+    
     // Probar os_mkdir
     // os_bitmap(1, false);
     // os_mkdir("/folder/god/chaurri5");
@@ -51,13 +52,13 @@ int main(int argc, char *argv[])
 
 
     
-    print_all_entries_from_dir(536679);
+    //print_all_entries_from_dir(536679);
     printf("\n");
-    print_all_entries_from_dir(285598);
+    //print_all_entries_from_dir(285598);
     // //os_rm("/folder/god/shrek.mp4");
     os_mkdir("/folder/god/ejemplo8");
     os_mkdir("/folder/god/ejemplo8/ejemplo9");
-    print_all_entries_from_dir(285598);
+    //print_all_entries_from_dir(285598);
 
     //os_hardlink("/folder/god/shrek.mp4", "/folder/nuevo.mp4");
     //print_all_entries_from_dir(285598);
@@ -65,10 +66,10 @@ int main(int argc, char *argv[])
     printf("\n");
     //print_all_entries_from_dir(285598);
     os_rmdir("/folder/god", true);
-    print_all_entries_from_dir(285598);
+    //print_all_entries_from_dir(285598);
     // printf("\n");
 
-    print_all_entries_from_dir(536679);
+    //print_all_entries_from_dir(536679);
     printf("\n");
     //print_all_entries_from_dir(285598);
     
@@ -80,13 +81,13 @@ int main(int argc, char *argv[])
 
 
     // Probar os_read
-    osFile* f = os_open("/folder/napkin.txt", 'r');
-    int nbytes = 10000;
-    unsigned char buffer[nbytes];
-    int bytes_read = os_read(f, buffer, nbytes);
-    printf("bytes_read = %i\n", bytes_read);
-    printf("buffer: %s\n", buffer);
-    os_close(f);
+    // osFile* f = os_open("/folder/napkin.txt", 'r');
+    // int nbytes = 10000;
+    // unsigned char buffer[nbytes];
+    // int bytes_read = os_read(f, buffer, nbytes);
+    // printf("bytes_read = %i\n", bytes_read);
+    // printf("buffer: %s\n", buffer);
+    // os_close(f);
 
     return 0;
 }

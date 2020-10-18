@@ -11,20 +11,52 @@
 
 char* diskname;
 unsigned int BLOCK_SIZE = 2048;
+bool DISKNEAME_VALID = false;
 
 // Establece como variable global la ruta local del disco
 void os_mount(char* disk){
     diskname = disk;
+
+    //manejo de error si no existe el disco
+    FILE * pf;
+    int errnum;
+    pf = fopen (disk, "rb");
+        
+    if (pf == NULL) {
+    
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+    } else {
+        DISKNEAME_VALID = true;
+        fclose (pf);
+    }
+    return;
 }
 
 // Imprimir bitmap  AL FINAL ARREGLAR A LA CANTIDAD DE BYTES CORRECTA
 void os_bitmap(unsigned num, bool hex){
-    long int buff_size = 15;
-    unsigned char buffer[buff_size];
-    if (num == 0){
-        for (int b = 1; b < 65; b++)
-        {
-            read_from_position(BLOCK_SIZE*b, buffer, buff_size);
+    if (DISKNEAME_VALID){
+        long int buff_size = 15;
+        unsigned char buffer[buff_size];
+        if (num == 0){
+            for (int b = 1; b < 65; b++)
+            {
+                read_from_position(BLOCK_SIZE*b, buffer, buff_size);
+                if(hex){
+                    unsigned char hex_buffer[buff_size * 2];
+                    print_hex_buffer(hex_buffer, buffer, buff_size);
+                    for (int i=0; i<buff_size*2; i++){
+                        printf("%c", hex_buffer[i]);
+                    }
+                    printf("\n");
+                }
+                else {
+                    print_binary_buffer(buffer, buff_size);
+                }
+            }      
+        }
+        else {
+            read_from_position(BLOCK_SIZE*num, buffer, buff_size);
             if(hex){
                 unsigned char hex_buffer[buff_size * 2];
                 print_hex_buffer(hex_buffer, buffer, buff_size);
@@ -37,34 +69,24 @@ void os_bitmap(unsigned num, bool hex){
                 print_binary_buffer(buffer, buff_size);
             }
         }
-        
-    }
-    else {
-        read_from_position(BLOCK_SIZE*num, buffer, buff_size);
-        if(hex){
-            unsigned char hex_buffer[buff_size * 2];
-            print_hex_buffer(hex_buffer, buffer, buff_size);
-            for (int i=0; i<buff_size*2; i++){
-                printf("%c", hex_buffer[i]);
-            }
-            printf("\n");
-        }
-        else {
-            print_binary_buffer(buffer, buff_size);
-        }
     }
 }
 
 // Verificar si archivo existe.
 int os_exists(char* path){
-    if (find_block_by_path(path) == -1)
-    {
-        return 0;
+    if (DISKNEAME_VALID){
+        if (find_block_by_path(path) == -1)
+        {
+            return 0;
+        }
+        return 1;
     }
-    return 1;
 }
 
 void os_ls(char* path){
+    if(!DISKNEAME_VALID){
+        return;
+    }
     long unsigned int dir_block_num = find_block_by_path(path);
     if (dir_block_num == -1){
         return;
@@ -75,7 +97,10 @@ void os_ls(char* path){
 }
 
 //crear un direcotrio con el path dado
-int os_mkdir(char* path){  
+int os_mkdir(char* path){ 
+    if(!DISKNEAME_VALID){
+        return 1;
+    } 
     // Buscamos un bloque vacio en el bitmap
     unsigned long int empty_block = find_empty_block();
     // Buscamos el bloque directorio donde tenemos que crear la entrada
@@ -111,6 +136,9 @@ int os_mkdir(char* path){
 
 osFile* os_open(char* path, char mode) {
 
+    if(!DISKNEAME_VALID){
+        return;
+    }
     // Modo escritura --> creamos un archivo 
     if(mode == 'w') {
         unsigned long int index_block_num = find_block_by_path(path);
@@ -196,12 +224,18 @@ osFile* os_open(char* path, char mode) {
 }
 
 int os_close(osFile* file_desc){
+    if(!DISKNEAME_VALID){
+        return -1;
+    }
     free(file_desc->index_block);
     free(file_desc);
     return 0;
 }
 
 int os_rm(char* path){
+    if(!DISKNEAME_VALID){
+        return -1;
+    }
     char path2[100];
     strcpy(path2, path);
     // Extract the first token
@@ -224,6 +258,15 @@ int os_rm(char* path){
     buffer[0] = num_of_hl;
     FILE * pFile;
     pFile = fopen(diskname, "r+");
+
+    //manejo de error
+    int errnum;
+    if (pFile == NULL) {
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+        return -1;
+    }
+
     fseek(pFile, start, SEEK_SET);
     fwrite(buffer, 1, 1, pFile);
     fclose(pFile);
@@ -254,6 +297,10 @@ int os_rm(char* path){
 */
 void os_hardlink(char*orig, char*dest){
 
+    if(!DISKNEAME_VALID){
+        return;
+    }
+
     //1. Encontrar la entrada vacía del bloque padre del destino
     long unsigned int parent_block = find_parent_block_by_path(dest);
     int empty_entry = find_empty_entry(parent_block);
@@ -280,6 +327,15 @@ void os_hardlink(char*orig, char*dest){
 
     FILE * pFile;
     pFile = fopen(diskname, "r+");
+
+    //manejo de error
+    int errnum;
+    if (pFile == NULL) {
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+        return;
+    }
+
     fseek(pFile, start, SEEK_SET);
     fwrite(buffer, 1, 1, pFile);
     fclose(pFile);
@@ -289,6 +345,10 @@ void os_hardlink(char*orig, char*dest){
 }
 
 void os_rmdir(char*path, bool recursive){
+
+    if(!DISKNEAME_VALID){
+        return;
+    }
     unsigned long int block_num = find_block_by_path(path);
     printf("BLock_num: %i\n", block_num);
     if (block_num == -1)
@@ -301,7 +361,6 @@ void os_rmdir(char*path, bool recursive){
     Dir_block*  dir_block = dir_block_init(block_num);
     for (int i = 0; i < 64; i++)
     {
-        printf("EStoy en el i: %i del for\n", i);
         Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
         if (dir_entry->valid) //significa que está ocupado
         {
@@ -378,12 +437,20 @@ void os_rmdir(char*path, bool recursive){
     int value = 0;
 
     FILE * pFile;
-    
     start = BLOCK_SIZE*parent_block + num_entry*32;
     unsigned char buffer[1];
     read_from_position(start, buffer, 1);
     buffer[0] = buffer[0] & 0b00111111;
+
     pFile = fopen(diskname, "r+");
+    //manejo de error
+    int errnum;
+    if (pFile == NULL) {
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+        return;
+    }
+
     fseek(pFile, start, SEEK_SET);
     fwrite(buffer, 1, 1, pFile);
     fclose(pFile);
@@ -391,6 +458,10 @@ void os_rmdir(char*path, bool recursive){
 }
 
 int os_read(osFile* file_desc, void* buffer, int nbytes){
+
+    if(!DISKNEAME_VALID){
+        return;
+    }
 
     // Revisar si nbytes es mayor que file_size - bytes_read
     if (nbytes > ((file_desc->index_block->file_size) - file_desc->bytes_read))
@@ -519,80 +590,84 @@ int os_read(osFile* file_desc, void* buffer, int nbytes){
     return total_read_bytes;
 }
 
-int os_write(osFile* file_desc, void* buffer, int nbytes){
+// int os_write(osFile* file_desc, void* buffer, int nbytes){
+
+    //     if(!DISKNEAME_VALID){
+    //     return;
+    // }
     
-    // Avanzamos hasta el último index_block
-    unsigned long int curr_index_num = file_desc->index_block_num;
-    unsigned long int next_index_num = file_desc->index_block->next_index;
-    Index_block* curr_index_block;
+//     // Avanzamos hasta el último index_block
+//     unsigned long int curr_index_num = file_desc->index_block_num;
+//     unsigned long int next_index_num = file_desc->index_block->next_index;
+//     Index_block* curr_index_block;
 
-    if (file_desc->index_blocks_used == 1)
-    {
-        curr_index_block = index_block_init(curr_index_num, 1);
-    }
-    else
-    {
-        for (unsigned long int i = 0; i < file_desc->index_blocks_used; i++)
-        {
-            Index_block* next_index_block = index_block_init(next_index_num, 0);
-            curr_index_num = next_index_num;
-            next_index_num = next_index_block->next_index;
-            free(next_index_block);
-        }
-        curr_index_block = index_block_init(curr_index_num, 0);
-    }
+//     if (file_desc->index_blocks_used == 1)
+//     {
+//         curr_index_block = index_block_init(curr_index_num, 1);
+//     }
+//     else
+//     {
+//         for (unsigned long int i = 0; i < file_desc->index_blocks_used; i++)
+//         {
+//             Index_block* next_index_block = index_block_init(next_index_num, 0);
+//             curr_index_num = next_index_num;
+//             next_index_num = next_index_block->next_index;
+//             free(next_index_block);
+//         }
+//         curr_index_block = index_block_init(curr_index_num, 0);
+//     }
 
-    // Determinamos los offsets a partir de la cantidad de bloques usados
-    unsigned long int bytes_used = file_desc -> index_block -> file_size;
+//     // Determinamos los offsets a partir de la cantidad de bloques usados
+//     unsigned long int bytes_used = file_desc -> index_block -> file_size;
     
-    file_desc -> data_block_offset = bytes_used % 2048;
-    file_desc -> dis_block_offset = file_desc -> data_blocks_used % 512;
+//     file_desc -> data_block_offset = bytes_used % 2048;
+//     file_desc -> dis_block_offset = file_desc -> data_blocks_used % 512;
     
-    if (file_desc -> index_blocks_used == 1){
-        file_desc -> index_block_offset = file_desc -> indirect_blocks_used % 509;
-    }
-    else{
-        file_desc -> index_block_offset = (file_desc -> indirect_blocks_used-509) % 511; // Verificar
-    }
+//     if (file_desc -> index_blocks_used == 1){
+//         file_desc -> index_block_offset = file_desc -> indirect_blocks_used % 509;
+//     }
+//     else{
+//         file_desc -> index_block_offset = (file_desc -> indirect_blocks_used-509) % 511; // Verificar
+//     }
 
-    // Instanciamos el último dis_block
-    Dis_block* curr_dis_block = dis_block_init(curr_index_block->pointers[file_desc->index_block_offset]);
+//     // Instanciamos el último dis_block
+//     Dis_block* curr_dis_block = dis_block_init(curr_index_block->pointers[file_desc->index_block_offset]);
 
-    // Instanciamos el último data_block
-    Data_block* curr_data_block = data_block_init(curr_dis_block->pointers[file_desc->dis_block_offset]);
+//     // Instanciamos el último data_block
+//     Data_block* curr_data_block = data_block_init(curr_dis_block->pointers[file_desc->dis_block_offset]);
 
-    int written_bytes = 0;
-    int total_written_bytes = 0;
-    int not_written_bytes = nbytes;
-    unsigned char buffer[nbytes];
+//     int written_bytes = 0;
+//     int total_written_bytes = 0;
+//     int not_written_bytes = nbytes;
+//     unsigned char buffer[nbytes];
 
-    // Happy path:
-        // Usamos write_data_block
-        // Si lo que le queda libre al bloque es menor a nbytes--> escribe lo que queda. Retorna cuanto escribió.
-        // Si lo que le queda libre al bloque es mayor a nbytes --> escribe los nbytes. Retorna 0.
+//     // Happy path:
+//         // Usamos write_data_block
+//         // Si lo que le queda libre al bloque es menor a nbytes--> escribe lo que queda. Retorna cuanto escribió.
+//         // Si lo que le queda libre al bloque es mayor a nbytes --> escribe los nbytes. Retorna 0.
 
-        // Tomamos el numero retornado por write_data_block()
-        // Si es mayor a 0 --> encontrar siguiente DB next_db()
-        // next_db(file_desc, curr_dis, curr_index, dis_block_offset): retorna block num del siguiente DB
-        // Si quedan ptrs por leer en el DIS block --> retornar block num del siguiente ptr
-        // Si no quedan ptrs por leer en el DIS block --> encontrar el siguiente DIS block next_dis()
+//         // Tomamos el numero retornado por write_data_block()
+//         // Si es mayor a 0 --> encontrar siguiente DB next_db()
+//         // next_db(file_desc, curr_dis, curr_index, dis_block_offset): retorna block num del siguiente DB
+//         // Si quedan ptrs por leer en el DIS block --> retornar block num del siguiente ptr
+//         // Si no quedan ptrs por leer en el DIS block --> encontrar el siguiente DIS block next_dis()
 
-    // Falta hacer el while con las verificaciones de cuando parar. 
-    written_bytes = write_data_block(file_desc, curr_data_block, buffer, not_written_bytes, nbytes, total_written_bytes);
-    total_written_bytes += written_bytes;
+//     // Falta hacer el while con las verificaciones de cuando parar. 
+//     written_bytes = write_data_block(file_desc, curr_data_block, buffer, not_written_bytes, nbytes, total_written_bytes);
+//     total_written_bytes += written_bytes;
 
-    if(total_written_bytes < nbytes) // Dudas
-    {
-        unsigned long int next_db_num = next_db(file_desc, curr_index_block, curr_dis_block, curr_data_block);
-        Data_block* new_data_block = data_block_init(next_db_num);
-        memcpy(curr_data_block, new_data_block, sizeof(new_data_block));
-        free(new_data_block);
-    }
-    // Hacer función para verificar que el disco se llenó
+//     if(total_written_bytes < nbytes) // Dudas
+//     {
+//         unsigned long int next_db_num = next_db(file_desc, curr_index_block, curr_dis_block, curr_data_block);
+//         Data_block* new_data_block = data_block_init(next_db_num);
+//         memcpy(curr_data_block, new_data_block, sizeof(new_data_block));
+//         free(new_data_block);
+//     }
+//     // Hacer función para verificar que el disco se llenó
 
-    // Hay que agregar la referencia al nuevo index block que potencialmente se creó en next_db. 
+//     // Hay que agregar la referencia al nuevo index block que potencialmente se creó en next_db. 
 
-    // Al final tenemos que actualizar el index_block -> file_size
+//     // Al final tenemos que actualizar el index_block -> file_size
 
-    // Retornamos la cantidad de bytes efectivamente escritos.
-}
+//     // Retornamos la cantidad de bytes efectivamente escritos.
+// }

@@ -32,6 +32,7 @@ return dir_name;
 
 }
 
+
 void modify_bitmap(unsigned long int block_num, int value){
     // Vamos a leer el Byte que queremos modificar
     int buff_size = 1;
@@ -55,6 +56,12 @@ void modify_bitmap(unsigned long int block_num, int value){
     // Escribimos el bitmap
     FILE * pFile;
     pFile = fopen(diskname, "r+");
+    int errnum;
+    if (pFile == NULL) {
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+        return;
+    }
     fseek(pFile, start, SEEK_SET);
     fwrite(buffer, 1, 1, pFile);
     fclose(pFile);
@@ -103,13 +110,21 @@ void print_binary_buffer(unsigned char* buffer, long int buff_size)
 void read_from_position(long int start, unsigned char* buffer, long int buff_size)
 {
     FILE* ptr = fopen(diskname, "rb");
-    if (!ptr)
+    // if (!ptr)
+    // {
+    //     printf("Unable to open file!");
+    // }
+    int errnum;
+    if (ptr == NULL) {
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+    } 
+    else 
     {
-        printf("Unable to open file!");
-    }
     fseek(ptr, start, SEEK_SET);
     fread(buffer, sizeof(unsigned char), buff_size, ptr);
     fclose(ptr);
+    };
 };
 
 // Imprimir buffer en hexadecimal
@@ -208,6 +223,14 @@ void create_dir_entry(unsigned long int parent_block, unsigned int empty_block, 
 
     FILE * pFile;
     pFile = fopen(diskname, "r+");
+
+    //manejo de error
+    int errnum;
+    if (pFile == NULL) {
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+        return;
+    }
     // Editar directorio padre. El start es en la entrada.
     // // Escribimos que es de tipo 1:
     unsigned long int start = 2048*parent_block +  32*empty_entry;
@@ -251,6 +274,15 @@ void new_index_block(unsigned long int empty_block){
     }
     FILE * pFile;
     pFile = fopen(diskname, "r+");
+
+    //manejo de error
+    int errnum;
+    if (pFile == NULL) {
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+        return;
+    }
+
     fseek(pFile, start, SEEK_SET);
     fwrite(buffer, 8, 1, pFile);
     fclose(pFile);
@@ -261,6 +293,15 @@ void new_index_block(unsigned long int empty_block){
 void write_entry_block(unsigned long int parent_block, unsigned int index_block, int empty_entry, unsigned char* name, int type){
     FILE * pFile;
     pFile = fopen(diskname, "r+");
+
+    //manejo de error
+    int errnum;
+    if (pFile == NULL) {
+        errnum = errno;
+        fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+        return;
+    }
+
     //printf("nombre dentro: %s  , ", name);
     // Editar directorio padre. El start es en la entrada.
     // // Escribimos que es de tipo 1:
@@ -300,6 +341,15 @@ int read_data_block(osFile* file_desc, Data_block* curr_data_block, unsigned cha
         long unsigned int start = BLOCK_SIZE*curr_data_block->block_num + offset;
         FILE * pFile;
         pFile = fopen(diskname, "r");
+
+        //manejo de error
+        int errnum;
+        if (pFile == NULL) {
+            errnum = errno;
+            fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+            return;
+        }
+
         fseek(pFile, start, SEEK_SET);
         fread(small_buffer, bytes_to_read, 1, pFile);
         fclose(pFile);
@@ -313,6 +363,15 @@ int read_data_block(osFile* file_desc, Data_block* curr_data_block, unsigned cha
         long unsigned int start = BLOCK_SIZE*curr_data_block->block_num + offset;
         FILE * pFile;
         pFile = fopen(diskname, "r");
+
+        //manejo de error
+        int errnum;
+        if (pFile == NULL) {
+            errnum = errno;
+            fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+            return;
+        }
+
         fseek(pFile, start, SEEK_SET);
         fread(small_buffer, bytes_to_read, 1, pFile);
         fclose(pFile);
@@ -341,6 +400,15 @@ int write_data_block(osFile* file_desc, Data_block* curr_data_block, void* buffe
         long unsigned int start = BLOCK_SIZE*curr_data_block->block_num + offset;
         FILE * pFile;
         pFile = fopen(diskname, "r+");
+
+        //manejo de error
+        int errnum;
+        if (pFile == NULL) {
+            errnum = errno;
+            fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+            return;
+        }
+
         fseek(pFile, start, SEEK_SET);
         fwrite(local_buffer, bytes_to_write, 1, pFile);
         fclose(pFile);
@@ -361,6 +429,15 @@ int write_data_block(osFile* file_desc, Data_block* curr_data_block, void* buffe
         long unsigned int start = BLOCK_SIZE*curr_data_block->block_num + offset;
         FILE * pFile;
         pFile = fopen(diskname, "r+");
+
+        //manejo de error
+        int errnum;
+        if (pFile == NULL) {
+            errnum = errno;
+            fprintf(stderr, "Error al leer el disco: %s\n", strerror( errnum ));
+            return;
+        }
+        
         fseek(pFile, start, SEEK_SET);
         fwrite(local_buffer, bytes_to_write, 1, pFile);
         fclose(pFile);
