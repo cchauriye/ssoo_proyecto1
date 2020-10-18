@@ -9,6 +9,15 @@ struct dir_block
   unsigned int entries[64]; //Arreglo de punteros hacia las entradas
 };
 
+// Bitmap
+struct bitmap;
+typedef struct bitmap Bitmap;
+
+struct bitmap
+{
+  unsigned int bloques[64]; //Arreglo de bloques
+};
+
 // Entrada de directorio
 struct dir_block_entry;
 typedef struct dir_block_entry Dir_block_entry;

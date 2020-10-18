@@ -33,9 +33,7 @@ Dir_block_entry* dir_block_entry_init(Dir_block* dir_block, unsigned int entry_n
     read_from_position(entry_ptr, buffer, buff_size);
 
     // Sacamos los primeros 2 bits: valido, archivo u directorio
-    // printf("el primer byte es: %i\n", buffer[0]);
     dir_block_entry->valid = buffer[0] >> 6;
-    // printf("los primeros dos bits son: %u\n", dir_block_entry->valid);
 
     // Sacamos los bits 2 a 22: numero de un bloque indice o directorio
     // Para el primer byte sin los primeros 2 bits hay que hacer un AND con 0011 1111
@@ -77,12 +75,6 @@ Index_block* index_block_init(unsigned int block_number, int first){
       buff_size = 7;
       unsigned char buffer2[buff_size];
       read_from_position(2048*block_number + 1, buffer2, buff_size);
-      // printf("los bytes de file size son:\n");
-      // for (int bn = 0; bn < 7; bn++)
-      // {
-      //   printf("%i: %i\n", bn, buffer2[bn]);
-      // }
-      
       unsigned long long file_size = 0;
       file_size = (file_size + buffer2[0]) << 8;
       file_size = (file_size + buffer2[1]) << 8;
@@ -172,16 +164,10 @@ Dis_block* dis_block_init(unsigned int block_number){
 unsigned long int find_block_by_name(unsigned int curr_block_num, char* name)
 {
   Dir_block* dir_block = dir_block_init(curr_block_num);
-  // printf("estoy buscando el name: %s \n", name);
   for (int i = 0; i < 64; i++)
   {
     Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
-    // printf("name del entry %i es %s \n", i, dir_entry->name);
-    //printf("\n");
-
-    //  Verifico que sea el nombre correcto y que apunte a un directorio
     if(strcmp(name, dir_entry->name) == 0 && dir_entry->valid != 0) {
-      // printf("lo encontre!\n");
       unsigned long int block_num = dir_entry->block_num;
       free(dir_entry);
       free(dir_block);
@@ -196,12 +182,9 @@ unsigned long int find_block_by_name(unsigned int curr_block_num, char* name)
 unsigned long int find_entry_num_by_name(unsigned int curr_block_num, char* name)
 {
   Dir_block* dir_block = dir_block_init(curr_block_num);
-  // printf("estoy buscando el name: %s \n", name);
   for (unsigned long int i = 0; i < 64; i++)
   {
     Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
-    // printf("name del entry %i es %s \n", i, dir_entry->name);
-    // printf("\n");
 
     //  Verifico que sea el nombre correcto y que apunte a un directorio
     if(strcmp(name, dir_entry->name) == 0 && dir_entry->valid != 0) {
@@ -224,7 +207,6 @@ void print_files_from_dir(unsigned int dir_block_num)
 
     //  Verifico que sea el nombre correcto y que apunte a un archivo
     if(dir_entry->valid != 0) {
-      printf("Entry %i: %s\n", i, dir_entry->name);
     }
     free(dir_entry);
   }
@@ -238,7 +220,7 @@ void print_all_entries_from_dir(unsigned int curr_block_num)
   for (int i = 0; i < 64; i++)
   {
     Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
-    printf("Entry %i: %s |Block: %i |value: %i\n", i, dir_entry->name, dir_entry->block_num,dir_entry->valid);
+    printf("Entry %i: %s |Block: %i |valid: %i\n", i, dir_entry->name, dir_entry->block_num,dir_entry->valid);
     free(dir_entry);
   }
   free(dir_block);
@@ -253,7 +235,6 @@ int find_empty_entry (unsigned long int block_num)
     Dir_block_entry* dir_entry = dir_block_entry_init(dir_block, i);
     if (!dir_entry->valid) //significa que está vacío
      {
-      // printf("La entrada %i del bloque %i está vacía\n", i, block_num);
       free(dir_entry);
       free(dir_block);
       return i;
@@ -264,60 +245,3 @@ int find_empty_entry (unsigned long int block_num)
   free(dir_block);
   return -1;
 }
-
-//https://stackoverflow.com/questions/41384262/convert-string-to-binary-in-c
-char* stringToBinary(char* s)
- {
-    if(s == NULL) return 0; /* no input string */
-    size_t len = strlen(s);
-    char *binary = malloc(len*8 + 1); // each char is one byte (8 bits) and + 1 at the end for null terminator
-    binary[0] = '\0';
-    for(size_t i = 0; i < len; ++i) {
-        char ch = s[i];
-        for(int j = 7; j >= 0; --j){
-            if(ch & (1 << j)) {
-                strcat(binary,"1");
-            } else {
-                strcat(binary,"0");
-            }
-        }
-    }
-    return binary;
-}
-
-char* decimal_to_binary(int n)
-{
-  int c, d, t;
-  char *p;
-
-  t = 0;
-  p = (char*)malloc(32+1);
-
-  if (p == NULL)
-    exit(EXIT_FAILURE);
-
-  for (c = 31 ; c >= 0 ; c--)
-  {
-    d = n >> c;
-
-    if (d & 1)
-      *(p+t) = 1 + '0';
-    else
-      *(p+t) = 0 + '0';
-
-    t++;
-  }
-  *(p+t) = '\0';
-
-  return  p;
-}
-
-char* itob(int i) {
-    static char bits[8] = {'0','0','0','0','0','0','0','0'};
-    int bits_index = 7;
-    while ( i > 0 ) {
-        bits[bits_index--] = (i & 1) + '0';
-        i = ( i >> 1);
-    }
-    return bits;
-  }
