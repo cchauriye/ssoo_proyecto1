@@ -40,6 +40,7 @@ struct index_block{
   unsigned long long int file_size; // 7 bytes para tamaño de archivo
   unsigned long int pointers[511]; // 509 0 511 punteros de 4 bytes a bloques de DIS
   unsigned long int next_index;
+  unsigned long int block_num;
 };
 
 // Bloque de datos
@@ -59,6 +60,7 @@ typedef struct dis_block Dis_block;
 struct dis_block
 {
   unsigned long int pointers[2048/4];
+  unsigned long int block_num;
 };
 
 // Inicializa un bloque directorio
@@ -89,3 +91,6 @@ void print_all_entries_from_dir(unsigned int curr_block_num);
 void print_files_from_dir(unsigned int dir_block_num);
 
 int find_empty_entry(unsigned long int block_num);
+
+void save_dis_block(Dis_block* dis_block);
+void save_index_block(Index_block* index_block);

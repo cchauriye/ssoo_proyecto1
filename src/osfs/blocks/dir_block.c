@@ -60,6 +60,7 @@ Index_block* index_block_init(unsigned int block_number, int first){
 
     // Evaluamos si es el primero o no
     index_block -> position = first;
+    index_block->block_num = block_number;
     long int buff_size; 
     unsigned long int pointer;
 
@@ -145,6 +146,7 @@ Data_block* data_block_init(unsigned int block_number){
 
 Dis_block* dis_block_init(unsigned int block_number){
   Dis_block* dis_block = malloc(sizeof(Dis_block));
+  dis_block->block_num = block_number;
 
   int buff_size = 2048;
   unsigned char buffer[buff_size];
@@ -245,3 +247,73 @@ int find_empty_entry (unsigned long int block_num)
   free(dir_block);
   return -1;
 }
+
+void save_index_block(Index_block* index_block)
+  {
+    unsigned char buffer[2048];
+    buffer[0] = index_block->num_hardlinks;
+
+    unsigned long long int file_size = index_block->file_size;
+
+    if(index_block->position == 1)
+    {
+      buffer[1] = (file_size & 0b0000000011111111000000000000000000000000000000000000000000000000) << 8;
+      buffer[2] = (file_size & 0b0000000000000000111111110000000000000000000000000000000000000000) << 8*2;
+      buffer[3] = (file_size & 0b0000000000000000000000001111111100000000000000000000000000000000) << 8*3;
+      buffer[4] = (file_size & 0b0000000000000000000000000000000011111111000000000000000000000000) << 8*4;
+      buffer[5] = (file_size & 0b0000000000000000000000000000000000000000111111110000000000000000) << 8*5;
+      buffer[6] = (file_size & 0b0000000000000000000000000000000000000000000000001111111100000000) << 8*6;
+      buffer[7] = (file_size & 0b0000000000000000000000000000000000000000000000000000000011111111) << 8*7;
+
+      for (int i = 0; i < index_block->num_pointers; i++)
+      {
+        buffer[7 + i*4] = (index_block->pointers[i] & 0b11111111000000000000000000000000);
+        buffer[7 + i*4 + 1] = (index_block->pointers[i] & 0b00000000111111110000000000000000) << 8;
+        buffer[7 + i*4 + 2] = (index_block->pointers[i] & 0b00000000000000001111111100000000) << 8*2;
+        buffer[7 + i*4 + 3] = (index_block->pointers[i] & 0b00000000000000000000000011111111) << 8*3;
+      }
+    }
+    else
+    {
+      for (int i = 0; i < index_block->num_pointers; i++)
+      {
+        buffer[i*4] = (index_block->pointers[i] & 0b11111111000000000000000000000000);
+        buffer[i*4 + 1] = (index_block->pointers[i] & 0b00000000111111110000000000000000) << 8;
+        buffer[i*4 + 2] = (index_block->pointers[i] & 0b00000000000000001111111100000000) << 8*2;
+        buffer[i*4 + 3] = (index_block->pointers[i] & 0b00000000000000000000000011111111) << 8*3;
+      }
+    }
+    
+
+
+    buffer[2044] = (index_block->next_index & 0b11111111000000000000000000000000);
+    buffer[2045] = (index_block->next_index & 0b00000000111111110000000000000000) << 8;
+    buffer[2046] = (index_block->next_index & 0b00000000000000001111111100000000) << 8*2;
+    buffer[2047] = (index_block->next_index & 0b00000000000000000000000011111111) << 8*3;
+
+    FILE * pFile;
+    pFile = fopen(diskname, "r+");
+    fseek(pFile, 2048 * index_block->block_num, SEEK_SET);
+    fwrite(buffer, 2048, 1, pFile);
+    fclose(pFile);
+  }
+
+void save_dis_block(Dis_block* dis_block)
+  {
+    unsigned char buffer[2048];
+
+    for (int i = 0; i < 512; i++)
+    {
+      buffer[i*4] = (dis_block->pointers[i] & 0b11111111000000000000000000000000);
+      buffer[i*4 + 1] = (dis_block->pointers[i] & 0b00000000111111110000000000000000) << 8;
+      buffer[i*4 + 2] = (dis_block->pointers[i] & 0b00000000000000001111111100000000) << 8*2;
+      buffer[i*4 + 3] = (dis_block->pointers[i] & 0b00000000000000000000000011111111) << 8*3;
+    }
+
+    FILE * pFile;
+    pFile = fopen(diskname, "r+");
+    fseek(pFile, 2048 * dis_block->block_num, SEEK_SET);
+    fwrite(buffer, 2048, 1, pFile);
+    fclose(pFile);
+  }
+

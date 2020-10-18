@@ -165,5 +165,14 @@ int main(int argc, char *argv[])
     // Probar os_unload caso 3
 
 
+    // Probar os_write
+    // osFile* f = os_open("/folder/keso1.txt", 'w');
+    // unsigned char* buffer = "Hola como estas biuqvd qd q  wcqwl";
+    // os_write(f, buffer, 10);
+    // os_close(f);
+    // os_ls("/folder");
+    // os_unload("/folder/keso.txt", "local_keso.txt");
+
+
     return 0;
 }
