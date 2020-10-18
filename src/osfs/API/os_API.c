@@ -524,9 +524,15 @@ int os_write(osFile* file_desc, void* buffer, int nbytes){
     unsigned char buffer2[nbytes]; 
     memcpy(buffer2,(unsigned char *)buffer, nbytes); // Falta caso borde
     file_desc -> index_block -> file_size = nbytes; // Falta caso borde
+    
+    // printf("1. filesize: %llu\n", file_desc -> index_block -> file_size);
+    // save_index_block(file_desc->index_block);
+    // Index_block* temp = index_block_init(file_desc->index_block_num, 1);
+    // printf("2. filesize: %llu\n", temp->file_size);
+    // free(temp);
 
     // El bloque es nuevo (index vacio)
-    if(file_desc -> index_block -> file_size == 0)
+    if(file_desc -> index_block -> file_size == nbytes)
     {
         // Calculamos la cantidad de bloques que utilizará el archivo
         unsigned long int db_used = nbytes / BLOCK_SIZE;
@@ -579,6 +585,7 @@ int os_write(osFile* file_desc, void* buffer, int nbytes){
                 Index_block* new_index_block = index_block_init(empty_block, 0);
                 empty_block = find_empty_block();
                 new_index_block -> next_index = empty_block;
+                save_index_block(new_index_block);
                 free(new_index_block);
             }
         }
@@ -607,14 +614,21 @@ int os_write(osFile* file_desc, void* buffer, int nbytes){
                     counter++;
                     empty_block = find_empty_block();
                 }
+                save_dis_block(new_dis_block);
                 free(new_dis_block);
             }
             Index_block* next_index_block = index_block_init(next_index, 0);
             next_index = next_index_block -> next_index;
             memcpy(curr_index_block, next_index_block, sizeof(next_index_block));
+            save_index_block(next_index_block);
             free(next_index_block);
         }
+        save_index_block(curr_index_block);
         free(curr_index_block);
+
+        Index_block* first_index_block = index_block_init(file_desc->index_block_num, 1);
+        printf("filesize: %llu\n", first_index_block->file_size);
+        free(first_index_block);
 
         // Ahora que tenemos a maxito podemos llegar y escribir
         FILE * pFile;
@@ -641,12 +655,6 @@ int os_write(osFile* file_desc, void* buffer, int nbytes){
             }
             fclose(pFile);
         }
-    }
-
-    // El bloque ya existe 
-    else
-    {
-
     }
 
     // Hacer función para verificar que el disco se llenó
