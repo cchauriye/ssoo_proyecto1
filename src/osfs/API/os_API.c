@@ -146,8 +146,16 @@ osFile* os_open(char* path, char mode) {
 
     // Ahora instanciamos el archivo que existia o que acabamos de crear
     osFile* file = malloc(sizeof(osFile));
+    file->bytes_read = 0;
+    file->index_blocks_read = 0;
+    file->dis_blocks_read = 0;
+    file->data_blocks_read = 0;
+    file->index_block_offset = 0;
+    file->dis_block_offset = 0;
+    file->data_block_offset = 0;
 
     unsigned long int index_block_num = find_block_by_path(path);
+    file->index_block_num = index_block_num;
 
     // Instanciamos el Index Block
     Index_block* index_block = index_block_init(index_block_num, 1);
@@ -239,6 +247,7 @@ int os_rm(char* path){
 
     return 0;
 }
+
 
 
 /*int os_hardlink(char*orig, char*dest). Funcion que se encarga de crear un hardlink del archivo 
@@ -385,4 +394,134 @@ void os_rmdir(char*path, bool recursive){
 
     
     
+
+int os_read(osFile* file_desc, void* buffer, int nbytes){
+
+    // Revisar si nbytes es mayor que file_size - bytes_read
+    if (nbytes > ((file_desc->index_block->file_size) - file_desc->bytes_read))
+    {
+        nbytes = (file_desc->index_block->file_size) - file_desc->bytes_read;
+    }
+
+    // ------- Esta parte potencialmente se puede ahorrar si vamos actualizando los parametros de file_desc
+    // // Tenemos que calcular desde donde comenzar leyendo
+    // // En que bloque de datos quedo la ultima lectura
+    // unsigned long int data_blocks_fully_read = file_desc->bytes_read / BLOCK_SIZE;
+    // unsigned long int offset_in_last_data_block = file_desc->bytes_read % BLOCK_SIZE;
+
+    // // Cuantos bloques DIS fueron leidos
+    // unsigned long int dis_blocks_fully_read = data_blocks_fully_read*4 / BLOCK_SIZE;
+    // unsigned long int offset_in_last_dis_block = (data_blocks_fully_read*4) % BLOCK_SIZE; // Numero del ultimo ptr a un bloque de datos que fue leido completo (si numeramos los ptrs en dis de 0 a 2048/4)
+
+    // // Cuantos bloques indice fueron leidos
+    // unsigned long int index_blocks_fully_read;
+    // unsigned long int offset_in_last_index_block;
+    // if (dis_blocks_fully_read*4 < 2036){
+    //     index_blocks_fully_read = 0;
+    //     offset_in_last_index_block = data_blocks_fully_read*4;
+    // }
+    // else{
+    //     unsigned long int dis_blocks_read_in_first_index = 2036/4;
+    //     index_blocks_fully_read = 1 + (dis_blocks_fully_read - dis_blocks_read_in_first_index)*4/2044;
+    //     offset_in_last_index_block = (data_blocks_fully_read - dis_blocks_read_in_first_index)*4 % 2044;
+    // }
+    // --------------- Hasta aca ------------------
+
+    // Funciones por hacer:
+
+    // Procedimiento:
+    // Siempre mantener index_block_read, dis_blocks_read, data_blocks_read
+    // - Recorrer la lista ligada de Index_blocks hasta el index block que hay que leer
+    // - Instanciar el DIS block que hay que leer
+    // - Instanciar el DB que hay que leer
+    // - Leer DB desde el offset
+    // - Si se acaba, pasar al siguiente DB que apunte el DIS
+    // - Si se acaba el DIS, pasar al siguiente DIS que apunte el index
+    // - Si se acaba el index, pasar al siguiente index
+
+    // Avanzamos hasta el index block correspondiente
+    unsigned long int curr_index_num = file_desc->index_block_num;
+    unsigned long int next_index_num = file_desc->index_block->next_index;
+    Index_block* curr_index_block;
+    if (file_desc->index_blocks_read == 0)
+    {
+        curr_index_block = index_block_init(curr_index_num, 1);
+    }
+    else
+    {
+        for (unsigned long int i = 0; i < file_desc->index_blocks_read; i++)
+        {
+            Index_block* next_index_block = index_block_init(next_index_num, 0);
+            curr_index_num = next_index_num;
+            next_index_num = next_index_block->next_index;
+            free(next_index_block);
+        }
+        curr_index_block = index_block_init(curr_index_num, 0);
+    }
+    // Ya tenemos curr_index_block: bloque indice donde tenemos que leer
+
+    // Instanciamos el DIS block que hay que leer
+    Dis_block* curr_dis_block = dis_block_init(curr_index_block->pointers[file_desc->index_block_offset]);
+
+    // Instanciamos el DB que hay que leer
+    Data_block* curr_data_block = data_block_init(curr_dis_block->pointers[file_desc->dis_block_offset]);
+    
+    // read_data_block(): lee desde el offset del data block
+    // Si lo que le queda del bloque por leer es menor a nbytes--> lee lo que queda. Retorna cuanto leyo.
+    // Si lo que le queda del bloque por leer es mayor a nbytes --> lee los nbytes. Retorna 0.
+
+    // Tomamos el numero retornado por read_data_block()
+    // Si es mayor a 0 --> encontrar siguiente DB next_db()
+    // next_db(file_desc, curr_dis, curr_index, dis_block_offset): retorna block num del siguiente DB
+    // Si quedan ptrs por leer en el DIS block --> retornar block num del siguiente ptr
+    // Si no quedan ptrs por leer en el DIS block --> encontrar el siguiente DIS block next_dis()
+
+    // next_dis(file_desc, curr_index, index_block_offset)
+    // Si quedan ptrs por leer en el index block --> retornar el block num del siguiente DIS
+    // Si no quedan ptrs por leer en el index block --> retornar el block num del primer DIS en el siguiente Index
+
+    int not_read_bytes = nbytes;
+    int read_bytes;
+    int total_read_bytes = 0;
+    unsigned char small_buffer[2048];
+    unsigned char buffer2[nbytes];
+    while(not_read_bytes)
+    {
+        read_bytes = read_data_block(file_desc, curr_data_block, small_buffer, not_read_bytes, nbytes);
+        not_read_bytes -= read_bytes;
+
+        int buffer_offset = total_read_bytes;
+        // Traspasar small buffer al buffer
+        for (int i = 0; i <read_bytes; i++)
+        {
+            // memcpy(buffer2, small_buffer, read_bytes);
+            buffer2[buffer_offset + i] = small_buffer[i];
+        }
+        total_read_bytes += read_bytes;
+        // strcpy(buffer2, small_buffer);
+        // buffer = &small_buffer;
+
+        
+        if(not_read_bytes)
+        {
+            unsigned long int next_db_num = next_db(file_desc, curr_index_block, curr_dis_block, curr_data_block);
+            Data_block* new_data_block = data_block_init(next_db_num);
+            memcpy(curr_data_block, new_data_block, sizeof(new_data_block));
+            free(new_data_block);
+        }   
+    }    
+    
+    free(curr_data_block);
+    free(curr_dis_block);
+    free(curr_index_block);
+
+    // for (int i = 0; i < total_read_bytes; i++)
+    // {
+    //     printf("%c", buffer2[i]);
+    // }
+    
+    memcpy(buffer, buffer2, total_read_bytes);
+    // strcpy(buffer, buffer2);
+    return total_read_bytes;
+
 }

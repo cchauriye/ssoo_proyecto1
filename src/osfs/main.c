@@ -40,7 +40,9 @@ int main(int argc, char *argv[])
     // free(index2);
 
     // Probar os_open
-    //os_bitmap(1, false);
+
+    // os_bitmap(1, false);
+
     // osFile* f = os_open("/folder/god/mora13.txt", 'w');
     // printf("index block \n hardlinks: %i \n position: %u\n file size: %llu\n", f->index_block->num_hardlinks, f->index_block->position, f->index_block->file_size);
     // printf("f: \nindex blocks used: %lu\n indirect blocks used: %lu\n data blocks used: %lu\n", f->index_blocks_used, f->indirect_blocks_used, f->data_blocks_used);
@@ -71,9 +73,20 @@ int main(int argc, char *argv[])
     //print_all_entries_from_dir(285598);
     
 
-    
-    // unsigned long int b = find_block_by_path("/folder/god/shrek.mp4");
-    // printf("B: %lu\n", b);
+    // os_bitmap(1, false);
+
+    // Probar os_ls
+    // os_ls("/folder/god");
+
+
+    // Probar os_read
+    osFile* f = os_open("/folder/napkin.txt", 'r');
+    int nbytes = 10000;
+    unsigned char buffer[nbytes];
+    int bytes_read = os_read(f, buffer, nbytes);
+    printf("bytes_read = %i\n", bytes_read);
+    printf("buffer: %s\n", buffer);
+    os_close(f);
 
     return 0;
 }

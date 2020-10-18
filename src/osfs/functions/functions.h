@@ -1,4 +1,5 @@
 #pragma once
+#include "../API/os_API.h"
 
 // Modifica el bitmap correspondiente al bloque block_num al valor value (1 o 0)
 void modify_bitmap(unsigned long int block_num, int value);
@@ -12,3 +13,4 @@ long unsigned int find_parent_block_by_path(char* path);
 void new_index_block(unsigned long int empty_block);
 char* find_name_by_path(char* path);
 void write_entry_block(unsigned long int parent_block, unsigned int index_block, int empty_entry, unsigned char* name, int type);
+int read_data_block(osFile* file_desc, Data_block* curr_data_block, unsigned char* small_buffer, int not_read_bytes, int nbytes);
