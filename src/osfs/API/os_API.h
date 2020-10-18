@@ -17,7 +17,7 @@ struct osFile{
     unsigned long int indirect_blocks_used; // La cantidad de bloques de DIS que usa el archivo
 
     // Info util para os_read
-    unsigned long int bytes_read; // La cantidad de bytes leidos por os_read
+    unsigned long long int bytes_read; // La cantidad de bytes leidos por os_read
     unsigned long int index_blocks_read; // La cantidad de index blocks leidos por os_read
     unsigned long int dis_blocks_read; // La cantidad de dis blocks leidos por os_read
     unsigned long int data_blocks_read; // La cantidad de data blocks leidos por os_read
@@ -41,3 +41,4 @@ int os_rm(char* path);
 int os_mkdir(char* path);
 void os_rmdir(char* path, bool recursive);
 void os_hardlink(char*orig, char*dest);
+int os_unload(char* orig, char* dest);

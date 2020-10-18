@@ -391,11 +391,13 @@ void os_rmdir(char*path, bool recursive){
 }
 
 int os_read(osFile* file_desc, void* buffer, int nbytes){
-
     // Revisar si nbytes es mayor que file_size - bytes_read
     if (nbytes > ((file_desc->index_block->file_size) - file_desc->bytes_read))
     {
+        printf("Hemos leido %llu de %llu bytes\n", file_desc->bytes_read, file_desc->index_block->file_size);
+        printf("Piden leer %i ahora\n", nbytes);
         nbytes = (file_desc->index_block->file_size) - file_desc->bytes_read;
+        printf("Vamos a leer %i\n", nbytes);
     }
 
     // ------- Esta parte potencialmente se puede ahorrar si vamos actualizando los parametros de file_desc
@@ -594,4 +596,51 @@ int os_write(osFile* file_desc, void* buffer, int nbytes){
     // Al final tenemos que actualizar el index_block -> file_size
 
     // Retornamos la cantidad de bytes efectivamente escritos.
+}
+
+// Retorna 0 si sale todo bien, 1 en otro caso
+int os_unload(char* orig, char* dest){
+
+    // Verificamos que el path existe
+    unsigned long int index_block_num = find_block_by_path(orig);
+    if(index_block_num == -1)
+    {
+        return 1;
+    }
+
+    // Leemos el archivo
+    osFile* f = os_open(orig, 'r');
+    unsigned long long int bytes_to_read = f->index_block->file_size;
+    printf("File size: %llu\n", bytes_to_read);
+
+    // Vamos leyendo el archive de a buff_size bytes
+    int buff_size = 10000;
+    unsigned char buffer[buff_size];
+    int bytes_read;
+    unsigned long long int total_bytes_read = 0;
+
+    // Creamos el archivo nuevo
+    FILE *fp;
+    fp = fopen(dest, "wb");
+
+    while (bytes_to_read)
+    {
+        bytes_read = os_read(f, buffer, buff_size);
+        bytes_to_read -= bytes_read;
+        // printf("bytes_read = %i\n", bytes_read);
+        // printf("bytes_to_read = %i\n", bytes_to_read);
+        // for (int i = 0; i < bytes_read; i++)
+        // {
+        //     printf("%c", buffer[i]);
+        // }
+        // printf("\n");
+
+        // fseek(fp, total_bytes_read, SEEK_SET);
+        fwrite(buffer, bytes_read, 1 , fp);
+        total_bytes_read += bytes_read;
+    }
+
+    fclose(fp);
+    os_close(f);
+    return 0;
 }
