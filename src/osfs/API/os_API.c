@@ -33,30 +33,17 @@ void os_mount(char* disk){
     return;
 }
 
-// Imprimir bitmap  AL FINAL ARREGLAR A LA CANTIDAD DE BYTES CORRECTA
+// Imprimir bitmap 
 void os_bitmap(unsigned num, bool hex){
-    if (DISKNEAME_VALID){
-        long int buff_size = 15;
-        unsigned char buffer[buff_size];
-        if (num == 0){
-            for (int b = 1; b < 65; b++)
-            {
-                read_from_position(BLOCK_SIZE*b, buffer, buff_size);
-                if(hex){
-                    unsigned char hex_buffer[buff_size * 2];
-                    print_hex_buffer(hex_buffer, buffer, buff_size);
-                    for (int i=0; i<buff_size*2; i++){
-                        printf("%c", hex_buffer[i]);
-                    }
-                    printf("\n");
-                }
-                else {
-                    print_binary_buffer(buffer, buff_size);
-                }
-            }      
-        }
-        else {
-            read_from_position(BLOCK_SIZE*num, buffer, buff_size);
+    if(!DISKNEAME_VALID){
+        return;
+    }
+    long int buff_size = 2048;
+    unsigned char buffer[buff_size];
+    if (num == 0){
+        for (int b = 1; b < 65; b++)
+        {
+            read_from_position(BLOCK_SIZE*b, buffer, buff_size);
             if(hex){
                 unsigned char hex_buffer[buff_size * 2];
                 print_hex_buffer(hex_buffer, buffer, buff_size);
@@ -68,19 +55,37 @@ void os_bitmap(unsigned num, bool hex){
             else {
                 print_binary_buffer(buffer, buff_size);
             }
+        }      
+    }
+    else {
+        read_from_position(BLOCK_SIZE*num, buffer, buff_size);
+        if(hex){
+            unsigned char hex_buffer[buff_size * 2];
+            print_hex_buffer(hex_buffer, buffer, buff_size);
+            for (int i=0; i<buff_size*2; i++){
+                printf("%c", hex_buffer[i]);
+            }
+            printf("\n");
+        }
+        else {
+            print_binary_buffer(buffer, buff_size);
         }
     }
+    
 }
 
-// Verificar si archivo existe.
+// Verificar si archivo existe. Retorna 0 si exsite, -1 caso contrario
 int os_exists(char* path){
-    if (DISKNEAME_VALID){
+    if(!DISKNEAME_VALID){
+        return -1;
+    }
         if (find_block_by_path(path) == -1)
         {
-            return 0;
+            //fprintf(stderr, "El archivo no existe\n"); 
+            return -1;
         }
-        return 1;
-    }
+        return 0;
+    
 }
 
 void os_ls(char* path){
@@ -89,6 +94,7 @@ void os_ls(char* path){
     }
     long unsigned int dir_block_num = find_block_by_path(path);
     if (dir_block_num == -1){
+        fprintf(stderr, "La ruta entregada no es válida.\n"); 
         return;
     }
     else{
@@ -99,16 +105,15 @@ void os_ls(char* path){
 //crear un direcotrio con el path dado
 int os_mkdir(char* path){ 
     if(!DISKNEAME_VALID){
-        return 1;
+        return -1;
     } 
     // Buscamos un bloque vacio en el bitmap
     unsigned long int empty_block = find_empty_block();
     // Buscamos el bloque directorio donde tenemos que crear la entrada
     unsigned long int parent_block_num = find_parent_block_by_path(path);
     if (parent_block_num == -1) {
-        printf("Ruta no es válida");
-        return 1;
-
+        printf("La ruta para crear el directorio no es válida.\n");
+        return -1;
     }
 
     char *slash = path;
@@ -119,15 +124,23 @@ int os_mkdir(char* path){
         slash = strpbrk(slash+1, "\\/");
         dir_name = strndup(path, slash - path);
         leftover = strdup(slash+1);
-        printf("leftover: %s\n", leftover);
         path = leftover;
         slash = leftover;
     };
     dir_name = slash;
-    printf("dir name: %s\n", dir_name);
+
+    int exists = find_entry_num_by_name(parent_block_num, dir_name);
+    if (exists != -1){
+        fprintf(stderr, "Ya existe una carpeta con el mismo nombre.\n"); 
+        return -1;
+    }
 
     // Buscamos una entrada vacia
     int empty_entry = find_empty_entry(parent_block_num);
+    if (empty_entry == -1){
+        fprintf(stderr, "No hay más espacio disponible en esta carpeta.\n"); 
+        return -1;
+    }
 
     // Creamos el directorio
     create_dir_entry(parent_block_num, empty_block, empty_entry, dir_name, 2);
