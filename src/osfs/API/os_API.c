@@ -81,7 +81,9 @@ int os_mkdir(char* path){
     // Buscamos el bloque directorio donde tenemos que crear la entrada
     unsigned long int parent_block_num = find_parent_block_by_path(path);
     if (parent_block_num == -1) {
+        printf("Ruta no es válida");
         return 1;
+
     }
 
     char *slash = path;
@@ -300,10 +302,10 @@ void os_rmdir(char*path, bool recursive){
             //recorro las entradas 
             //CASO 1: son archivos y los borro con os_rm
             //Armar el path para usar os_rm o usar parte de os_rm desde block_num
-            printf("BLOQUE: %i\n", block_num);
-            printf("path que entró al manejo path: %s\n", path);
-            printf("queremos eliminar: %s\n", dir_entry->name);
-            printf("EL valid es: %i\n",  dir_entry->valid);
+            // printf("BLOQUE: %i\n", block_num);
+            // printf("path que entró al manejo path: %s\n", path);
+            // printf("queremos eliminar: %s\n", dir_entry->name);
+            // printf("EL valid es: %i\n",  dir_entry->valid);
             char entry_path[2000];
             strcpy(entry_path, path);
             char file_name[200] = "/";
@@ -348,7 +350,6 @@ void os_rmdir(char*path, bool recursive){
     printf("Modifica el bitmap\n");
     //2- Libero la entrada del directorio padre los 2 bit= 00 ¿Es necesario puntero a 0 y nombre a 0? 
     unsigned int parent_block = find_parent_block_by_path(path);
-    printf("AAA\n");
     //unsigned char* name = find_name_by_path(path); //ACA SE CAE,la funcion funciona solo con cosas con extencion tipo ejemplo.txt Hay que arreglara!!
     char *slash = path;
     char* dir_name;
@@ -366,7 +367,6 @@ void os_rmdir(char*path, bool recursive){
     dir_name = slash;
     printf("%s\n", dir_name);
     unsigned long int  num_entry = find_entry_num_by_name(parent_block, dir_name);
-    printf("BUENARDO\n"); 
     unsigned long int start = 2048*parent_block +  32*num_entry;
     int value = 0;
 
