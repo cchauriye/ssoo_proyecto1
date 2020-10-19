@@ -1,31 +1,24 @@
-==25366== Memcheck, a memory error detector
-==25366== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==25366== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
-==25366== Command: ./osfs simdiskfilled.bin
-==25366== 
-
-
-
-
-
-
-
-
-
-
-shrek.mp4
-chaurri5
-caso1
-caso2
-caso3
-caso4
-caso5
-==25366== 
-==25366== HEAP SUMMARY:
-==25366==     in use at exit: 0 bytes in 0 blocks
-==25366==   total heap usage: 632 allocs, 632 frees, 983,872 bytes allocated
-==25366== 
-==25366== All heap blocks were freed -- no leaks are possible
-==25366== 
-==25366== For counts of detected and suppressed errors, rerun with: -v
-==25366== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==26376== Memcheck, a memory error detector
+==26376== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==26376== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
+==26376== Command: ./osfs simdiskfilled.bin
+==26376== 
+==26376== Conditional jump or move depends on uninitialised value(s)
+==26376==    at 0x4C32DEC: strcpy (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26376==    by 0x10C522: dir_block_entry_init (dir_block.c:53)
+==26376==    by 0x10CF82: find_block_by_name (dir_block.c:171)
+==26376==    by 0x109429: find_parent_block_by_path (functions.c:176)
+==26376==    by 0x10AEA2: os_hardlink (os_API.c:367)
+==26376==    by 0x10D5CF: main (main.c:126)
+==26376== 
+Ruta inválida de destino
+==26376== 
+==26376== HEAP SUMMARY:
+==26376==     in use at exit: 0 bytes in 0 blocks
+==26376==   total heap usage: 387 allocs, 387 frees, 602,152 bytes allocated
+==26376== 
+==26376== All heap blocks were freed -- no leaks are possible
+==26376== 
+==26376== For counts of detected and suppressed errors, rerun with: -v
+==26376== Use --track-origins=yes to see where uninitialised values come from
+==26376== ERROR SUMMARY: 64 errors from 1 contexts (suppressed: 0 from 0)
