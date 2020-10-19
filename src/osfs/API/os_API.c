@@ -503,7 +503,7 @@ int os_rmdir(char*path, bool recursive){
 int os_read(osFile* file_desc, void* buffer, int nbytes){
 
     if(!DISKNEAME_VALID){
-        return;
+        return -1;
     }
     // Revisar si nbytes es mayor que file_size - bytes_read
     if (nbytes > ((file_desc->index_block->file_size) - file_desc->bytes_read))
