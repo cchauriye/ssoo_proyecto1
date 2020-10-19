@@ -18,81 +18,42 @@ int main(int argc, char *argv[])
     
     os_mount(argv[1]);   
 
-    // os_exists("/folder/god/shrek.mp4");
-    // os_exists("/folder/god/shrekii.mp4");
-    
-    // Probar os_mkdir
-    os_bitmap(1, false);
-    // os_mkdir("/folder/god/chaurri5");
-    // os_ls("/folder/god");
-    // os_ls("/folder/godSDF");
-    // os_bitmap(1, false);
-
-    // Probar os_rm
-    // os_ls("/");
-    // unsigned long int parent_block = find_parent_block_by_path("/IMPORTANT.txt");
-    // printf("[main] parent block: %lu\n", parent_block);
-    // unsigned long int index_block = find_block_by_path("/IMPORTANT.txt");
-    // printf("[main] index block num: %lu\n", index_block);
-    // Index_block* index = index_block_init(index_block, 1);
-    // printf("hardlinks: %i\n", index->num_hardlinks);
-    // free(index);
-    // printf("-----OS RM--------\n");
-    //os_rm("/IMPORTANT.txt");
-    // os_ls("/");
-    // Index_block* index2 = index_block_init(index_block, 1);
-    // printf("hardlinks: %i\n", index2->num_hardlinks);
-    // free(index2);
-
-    // Probar os_open
-    // os_bitmap(1, false);
-
-
-    // osFile* f = os_open("/folder/go0d/mora22.txt", 'r');
-    osFile* f2 = os_open("/folder/god/mora13.txt", 'w');
-    //osFile* f3 = os_open("/folder/god/mora16.txt", 'w');
-
-    // printf("index block \n hardlinks: %i \n position: %u\n file size: %llu\n", f->index_block->num_hardlinks, f->index_block->position, f->index_block->file_size);
-    // printf("f: \nindex blocks used: %lu\n indirect blocks used: %lu\n data blocks used: %lu\n", f->index_blocks_used, f->indirect_blocks_used, f->data_blocks_used);
-    //int closed = os_close(f2);
-    //os_bitmap(1, false);
-
-
-    //print_all_entries_from_dir(536679);
-    printf("\n");
-    //print_all_entries_from_dir(285598);
-    // os_rm("/folder/god/mora17.txt");
-    //os_rm("/folder/god/mora13.txt");
-    printf("\n");
-    // os_mkdir("/folder/god/ejemplo8");
-    // os_mkdir("/folder/god/ejemplo8");
-    
-   
-    //print_all_entries_from_dir(285598);
-
-
-    //os_hardlink("/folder/god/shrek.mp4", "/foldder/nuevo.mp4");
-    //print_all_entries_from_dir(536679);
-    //print_all_entries_from_dir(285598);
-    //os_mkdir("/folder/god/ejem8/ejemplito9");
-    // printf("\n");
-    // //print_all_entries_from_dir(285598);
-    // os_rmdir("/folder/god", true);
-    // print_all_entries_from_dir(285598);
-    // // printf("\n");
-
-    //print_all_entries_from_dir(536679);
-    printf("\n");
-
+    // Probar os_bitmap
+    // Todo el bitmap en Hexadecimal
+    // os_bitmap(0, true);
+    // Todo el bitmap en Binario
+    // os_bitmap(0, false);
+    // Un bitmap en Hex
+    // os_bitmap(1, true);
+    // Un bitmap en Bin
+    // os_bitmap(10, false);
     
 
-    // os_bitmap(1, false);
+    // Probar os_exists
+    // int root = os_exists("/");
+    // int not_existing = os_exists("/folder/yo/no_existo.rar");
+    // int exist = os_exists("/folder/god/shrek.mp4");
+    // printf("%i\n%i\n%i\n", root, not_existing, exist);
 
     // Probar os_ls
-    // os_ls("/folder/god");
+    // os_ls("/");
+    // os_ls("/folder");
 
+    // Probar os_open
+    // Modo read
+    // osFile* f = os_open("/folder/napkin.txt", 'r');
+    // printf("index block \n hardlinks: %i \n position: %u\n file size: %llu\n", f->index_block->num_hardlinks, f->index_block->position, f->index_block->file_size);
+    // printf("f: \nindex blocks used: %lu\n indirect blocks used: %lu\n data blocks used: %lu\n", f->index_blocks_used, f->indirect_blocks_used, f->data_blocks_used);
+    // os_close(f);
+    // Modo write
+    // os_bitmap(1, false);
+    // osFile* f2 = os_open("/folder/nuevo.txt", 'w');
+    // printf("index block \n hardlinks: %i \n position: %u\n file size: %llu\n", f2->index_block->num_hardlinks, f2->index_block->position, f2->index_block->file_size);
+    // printf("f: \nindex blocks used: %lu\n indirect blocks used: %lu\n data blocks used: %lu\n", f2->index_blocks_used, f2->indirect_blocks_used, f2->data_blocks_used);
+    // os_close(f2);
+    // os_bitmap(1, false);
 
-    // Probar os_read caso 1
+     // Probar os_read caso 1
     // osFile* f = os_open("/folder/napkin.txt", 'r');
     // int nbytes = 100;
     // unsigned char buffer[nbytes];
@@ -156,14 +117,49 @@ int main(int argc, char *argv[])
     // }
     // os_close(f);
 
+    // Probar os_rm
+    // os_ls("/");
+    // unsigned long int index_block = find_block_by_path("/IMPORTANT.txt");
+    // Index_block* index = index_block_init(index_block, 1);
+    // printf("hardlinks: %i\n", index->num_hardlinks);
+    // free(index);
+    // os_rm("/IMPORTANT.txt");
+    // os_ls("/");
+    // Index_block* index2 = index_block_init(index_block, 1);
+    // printf("hardlinks: %i\n", index2->num_hardlinks);
+    // free(index2);
+    
+    // Probar os_mkdir
+    // os_bitmap(1, false);
+    // os_mkdir("/folder/god/caso5");
+    // os_ls("/folder/god");
+    // os_bitmap(1, false);
+
+
+    //os_hardlink("/folder/god/shrek.mp4", "/foldder/nuevo.mp4");
+    //print_all_entries_from_dir(536679);
+    //print_all_entries_from_dir(285598);
+    //os_mkdir("/folder/god/ejem8/ejemplito9");
+    // printf("\n");
+    // //print_all_entries_from_dir(285598);
+    // os_rmdir("/folder/god", true);
+    // print_all_entries_from_dir(285598);
+    // // printf("\n");
+
+    //print_all_entries_from_dir(536679);
+    // printf("\n");
+
+    
+
+    // os_bitmap(1, false);
+
+
+   
     // Probar os_unload caso 1
     // os_unload("/folder/napkin.txt", "nueva_napkin.txt");
 
     // Probar os_unload caso 2
     // os_unload("/IMPORTANT.txt", "nueva_IMPORTANT2.txt");
-
-    // Probar os_unload caso 3
-
 
     // Probar os_write
     // osFile* f = os_open("/folder/keso1.txt", 'w');

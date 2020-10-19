@@ -119,36 +119,11 @@ void read_from_position(long int start, unsigned char* buffer, long int buff_siz
 };
 
 // Imprimir buffer en hexadecimal
-void print_hex_buffer(unsigned char* hex_buffer, unsigned char* buffer, long int buff_size)
+void print_hex_buffer(unsigned char* buffer, long int buff_size)
 { 
-    for (int i = 0; i < buff_size; i++) {
-        int dec_num = buffer[i];
-        int j = 2*i;
-        if (dec_num == 0) 
-        {
-            hex_buffer[j] = 48;
-            hex_buffer[j+1] = 48;
-        }
-        while(dec_num != 0) 
-        {    
-            // temporary variable to store remainder 
-            int temp  = 0; 
-            
-            // storing remainder in temp variable. 
-            temp = dec_num % 16; 
-            
-            // check if temp < 10 
-            if(temp < 10) 
-            { 
-                hex_buffer[j] = temp + 48;
-            } 
-            else
-            { 
-                hex_buffer[j] = temp + 55;
-            } 
-            j++; 
-            dec_num = dec_num/16; 
-        } 
+    for (int i = 0; i < buff_size; i++) 
+    {
+        fprintf(stderr, "%02X\n", buffer[i]);
     }
 }
 
