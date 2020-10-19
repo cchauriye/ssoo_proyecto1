@@ -50,30 +50,24 @@ void os_bitmap(unsigned num, bool hex){
         for (int b = 1; b < 65; b++)
         {
             read_from_position(BLOCK_SIZE*b, buffer, buff_size);
-            if(hex){
-                unsigned char hex_buffer[buff_size * 2];
-                print_hex_buffer(hex_buffer, buffer, buff_size);
-                for (int i=0; i<buff_size*2; i++){
-                    fprintf(stderr, "%c", hex_buffer[i]);
-                }
-                fprintf(stderr,"\n");
+            if(hex)
+            {
+                print_hex_buffer(buffer, buff_size);
             }
-            else {
+            else 
+            {
                 print_binary_buffer(buffer, buff_size);
             }
         }      
     }
     else {
         read_from_position(BLOCK_SIZE*num, buffer, buff_size);
-        if(hex){
-            unsigned char hex_buffer[buff_size * 2];
-            print_hex_buffer(hex_buffer, buffer, buff_size);
-            for (int i=0; i<buff_size*2; i++){
-                fprintf(stderr, "%c", hex_buffer[i]);
-            }
-            fprintf(stderr, "\n");
+        if(hex)
+        {
+            print_hex_buffer(buffer, buff_size);    
         }
-        else {
+        else 
+        {
             print_binary_buffer(buffer, buff_size);
         }
     }
@@ -132,18 +126,31 @@ int os_mkdir(char* path){
         return -1;
     }
 
-    char *slash = path;
-    char* dir_name;
-    char* file_name;
-    char* leftover;
-    while(strpbrk(slash+1, "\\/")){
-        slash = strpbrk(slash+1, "\\/");
-        dir_name = strndup(path, slash - path);
-        leftover = strdup(slash+1);
-        path = leftover;
-        slash = leftover;
-    };
-    dir_name = slash;
+    // char *slash = path;
+    // char* dir_name;
+    // char* file_name;
+    // char* leftover;
+    // while(strpbrk(slash+1, "\\/")){
+    //     slash = strpbrk(slash+1, "\\/");
+    //     dir_name = strndup(path, slash - path);
+    //     leftover = strdup(slash+1);
+    //     path = leftover;
+    //     slash = leftover;
+    // };
+    // dir_name = slash;
+
+    // Sacamos el nombre del archivo
+    char path2[100];
+    strcpy(path2, path);
+    // Extract the first token
+    char* next_dir = strtok(path2, "/");
+    char* prev_dir;
+    // loop through the string to extract all other tokens
+    while( next_dir != NULL) {
+        prev_dir = next_dir;
+        next_dir = strtok(NULL, "/");
+    }
+    char* dir_name = prev_dir;
 
     int exists = find_entry_num_by_name(parent_block_num, dir_name);
     if (exists != -1){

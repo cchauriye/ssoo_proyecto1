@@ -209,6 +209,7 @@ void print_files_from_dir(unsigned int dir_block_num)
 
     //  Verifico que sea el nombre correcto y que apunte a un archivo
     if(dir_entry->valid != 0) {
+      fprintf(stderr, "%s\n", dir_entry->name);
     }
     free(dir_entry);
   }
