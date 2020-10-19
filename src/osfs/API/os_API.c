@@ -35,6 +35,7 @@ void os_mount(char* disk){
 
 // Imprimir bitmap 
 void os_bitmap(unsigned num, bool hex){
+    unsigned long int count = 0;
     if(!DISKNEAME_VALID){
         return;
     }
@@ -70,6 +71,17 @@ void os_bitmap(unsigned num, bool hex){
             print_binary_buffer(buffer, buff_size);
         }
     }
+    //Cuenta bloques ocupados
+    for (int b = 1; b < 65; b++)
+        {
+            read_from_position(BLOCK_SIZE*b, buffer, buff_size);
+            count = count + num_bloques_ocupados(buffer, buff_size); 
+        } 
+    fprintf(stderr,"Bloques ocupados: %lu\n", count);
+    unsigned long int free = 64*2048 - count;
+    fprintf(stderr,"Bloques libres: %lu\n", free);
+
+
     
 }
 
@@ -210,6 +222,10 @@ osFile* os_open(char* path, char mode) {
             fprintf(stderr, "Ruta inválida para la apertura de un archivo.\n"); 
             return -1;
         }
+    }
+    else {
+        fprintf(stderr, "Modo invalido, debe ser w o r.\n"); 
+        return -1;
     }
     osFile* file = malloc(sizeof(osFile));
     file->bytes_read = 0;
@@ -494,7 +510,7 @@ int os_rmdir(char*path, bool recursive){
 int os_read(osFile* file_desc, void* buffer, int nbytes){
 
     if(!DISKNEAME_VALID){
-        return;
+        return -1;
     }
     // Revisar si nbytes es mayor que file_size - bytes_read
     if (nbytes > ((file_desc->index_block->file_size) - file_desc->bytes_read))

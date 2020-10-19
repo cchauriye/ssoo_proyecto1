@@ -460,3 +460,18 @@ unsigned long int next_db(osFile* file_desc, Index_block* curr_index_block, Dis_
     }
 
 }
+
+int num_bloques_ocupados(unsigned char* buffer, long int buff_size)
+{
+    int num = 0;
+    for(int i = 0; i < buff_size; i++) {
+        int z = 128, oct = buffer[i];
+        while (z > 0)
+        {
+            if (oct & z)
+                num = num +1;
+            z >>= 1;
+        }
+    }
+    return num;
+}

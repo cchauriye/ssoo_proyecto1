@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     
     os_mount(argv[1]);   
 
+
     // Probar os_bitmap
     // Todo el bitmap en Hexadecimal
     // os_bitmap(0, true);
@@ -168,7 +169,6 @@ int main(int argc, char *argv[])
     // os_close(f);
     // os_ls("/folder");
     // os_unload("/folder/keso.txt", "local_keso.txt");
-
 
     return 0;
 }
