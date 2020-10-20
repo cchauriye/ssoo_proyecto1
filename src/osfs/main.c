@@ -182,5 +182,26 @@ int main(int argc, char *argv[])
 
     // ------------- MAIN 9: os_rm ------------- //
     
+    // //caso 1: removemos un archivo existente
+    // unsigned long int block_num = find_block_by_path("/memes");
+    // print_all_entries_from_dir(block_num);
+    // printf("\n\n");
+    // os_rm("/memes/generic (3).png");
+    // print_all_entries_from_dir(block_num);
+
+    // //caso 2: removemos un archivo que ya eliminamos
+    // unsigned long int block_num = find_block_by_path("/memes");
+    // print_all_entries_from_dir(block_num);
+    // printf("\n\n");
+    // os_rm("/memes/generic (3).png");
+    // print_all_entries_from_dir(block_num);
+
+    // //caso 3: removemos archivo de una ruta inválida
+    // unsigned long int block_num = find_block_by_path("/memes");
+    // print_all_entries_from_dir(block_num);
+    // printf("\n\n");
+    // os_rm("/NOTmemes/generic (3).png");
+    // print_all_entries_from_dir(block_num);
+    
     return 0;
 }
